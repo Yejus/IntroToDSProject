@@ -1,0 +1,134 @@
+---
+title: "project_redwine"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Project Proposal  
+
+### Data Information
+**Data: (5 points) Describe the data set you have chosen and where it comes from. If it has a license (such as a Creative Commons license), mention it. If it does not have a license, explain why you believe you are allowed to use these data for this project.**
+
+The data set we have chosen are related to red and white variants of the Portuguese "Vinho Verde" wine. There are a total of 12 inputs variables obtained using physicochemical tests in the data set, which are: 
+1 - fixed acidity  
+2 - volatile acidity  
+3 - citric acid  
+4 - residual sugar  
+5 - chlorides  
+6 - free sulfur dioxide  
+7 - total sulfur dioxide  
+8 - density  
+9 - pH  
+10 - sulphates  
+11 - alcohol  
+Output variable (based on sensory data):  
+12 - quality (score between 0 and 10)  
+
+The dataset is from https://archive.ics.uci.edu/ml/datasets/wine+quality and is donated to the UCI Machine Learning Repository. It is available for use on this project by including the following citation:  
+
+P. Cortez, A. Cerdeira, F. Almeida, T. Matos and J. Reis.
+Modeling wine preferences by data mining from physicochemical properties. In Decision Support Systems, Elsevier, 47(4):547-553, 2009.
+
+### Research Questions 
+
+**Research questions: (6 points) Come up with at least three research questions that you want to answer using these data. Make sure that at least two of these questions involve at least three variables. You are welcomed to create new variables based on existing ones. Note that you will have the option to update / revise / change these questions for your presentation at the end of the semester.**
+
+**Research Question 1:**  
+Just knowing the concentration of the chemical compounds, are we able to predict whether they are red wine or white wines?
+
+We will use logistic regression or decision trees to do so.
+
+**Research Question 2:**  
+Predict quality of wine using regression (lasso) for red and white separately, as well as together
+
+- can split into bands (bad, good) or more 
+- add label column 
+
+**Research Question 3:**  
+Clustering after finding the significant variables using stepwise regression.
+
+-- scatterplot matrix? 
+
+
+### EDA
+
+**EDA: (9 points) Perform exploratory data analysis (EDA) that addresses, but not necessarily fully answers, each of the three research questions you outlined above. Your EDA should contain numerical summaries and visualizations. Each R output or plot should be accompanied by a brief interpretation. Do not use more than 2 plots per research question.**
+
+
+```{r}
+## Data and necessary libraries
+
+redwine_data <- read.csv("winequality-red.csv")
+whitewine_data <- read.csv2("winequality-white.csv")
+
+whitewine_data[] <- lapply(whitewine_data, function(x) {
+    if(is.factor(x)) {
+      as.numeric(as.character(x))
+      }
+  else x
+})
+sapply(whitewine_data, class)
+
+redwine_data$type <- "red"
+whitewine_data$type <- "white"
+
+wine_data <- rbind(redwine_data, whitewine_data)
+```
+
+```{r}
+
+summary(redwine_data)
+summary(whitewine_data)
+summary(wine_data)
+
+```
+
+```{r}
+pairs(redwine_data[,c(1:12)])
+```
+
+```{r}
+pairs(whitewine_data[,c(1:12)])
+```
+
+```{r}
+# pairs(wine_data[,c(1:12)])
+
+```
+
+
+```{r}
+
+boxplot(redwine_data$quality)
+hist(redwine_data$quality)
+
+```
+
+### Timeline  
+**Timeline: (2 points) Sketch out a timeline for the work you will do each week to complete this project. Be realistic – discuss course schedules, travel plans, etc.**
+
+19-25 Oct:EDA, Refine Research Questions (by Wed), Begin Working on Research Questions and Deciding Methodology
+26-1 Nov: Team Check-in & Progress Update (Wed), Continue working on research questions 
+2-8 Nov: Team Check-in & Finalisation 
+9-13 Nov: Presentation 
+
+Deadline: 13 Nov
+
+### Teamwork  
+**Teamwork: (3 points) Describe in detail how you will divide up the work between team members and what aspects of the project you will complete together as a team. Note that during the presentation session each member needs to be able to answer questions about all aspects of the work, regardless of whether they took the lead on that section or not.**
+
+Data set-up / EDA - together
+
+Q1 - two people
+Q2 - one person
+Q3 - one person 
+
+
+
+
+
+
+

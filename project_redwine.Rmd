@@ -61,7 +61,7 @@ We will then use logistic regression or a binary decision tree to construct our 
 
 **Research Question 3:**  
 
-*Can we identify the most significant predictors in terms of chemical compounds that make a good red wine or white wine? Are the predictors mostly the same for the two kinds of wine, or are they different?* 
+*Can we identify the most significant predictors in terms of chemical compounds and/or properties that make a good red wine or white wine? Are the predictors mostly the same for the two kinds of wine, or are they different?* 
 
 In this follow-up to the previous question, we intend to explore if the significant chemical parameters that make a good red wine are the same as those that make a good white wine. Are they mostly the same? Are they mostly different? How much do they 
 influence the qualities of the two kinds of wine? 

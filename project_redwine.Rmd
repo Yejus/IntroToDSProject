@@ -40,29 +40,37 @@ Modeling wine preferences by data mining from physicochemical properties. In Dec
 **Research questions: (6 points) Come up with at least three research questions that you want to answer using these data. Make sure that at least two of these questions involve at least three variables. You are welcomed to create new variables based on existing ones. Note that you will have the option to update / revise / change these questions for your presentation at the end of the semester.**
 
 **Research Question 1:**  
-By looking at the 12 input variables in the data set which represent the concentration of the chemical compounds, are we able to predict whether the wine is red or white?
 
-This might seem like a unimportant question to ask (since you can just look at the wine), but its an interesting experiment to run because those chemical compounds refer to a certain taste profile, so the predictors that separate the two hints to us the taste profile that each type of wine should have.
+*Can we predict with good accuracy the kind of wine (red or white) by looking at their chemical properties and concentrations of different substances in them, as given in the dataset?* 
+
+This might seem like a unimportant question to ask (since you can just look at the wine), but its an interesting experiment to run because those chemical compounds and properties refer to a certain taste profile, 
+so the predictors that separate the two wines indicate the taste profile particular to them. There are over 11 different variables to consider. 
 
 Intended Approach:  
 We can use logistic regression or decision trees to construct the prediction model. The outcome variable is a binary one, so we chose logistic regression or decision trees since they both methods for binary classification.
 
 **Research Question 2:**  
 
-What are the significant predictors (in terms of concentration of chemical compounds) for 1) high quality red wine, 2) high quality white wine, and 3) high quality wine (both types) in general? 
-
-Through the comparison of 1) and 2), we hope to see whether different chemical compounds are prized differently between red wines and white wines. By doing 3), we hope to see whether there is a unifying standard that would make any wine a good wine.
+*Can we predict with good accuracy the quality of wine for both the red and the white varieties by considering their chemical properties and concentrations of different substances in them?* 
 
 Intended Approach:  
-We can split the possible values of the quality of wine (0 - 10) into bands where each range will represent a class label. For example, values between 0-6 could represent 'bad' wine, while values between 7-10 could represent 'good' wine. We will then use logistic regression or decision trees to construct the prediction model.  
+We want to make this a binary classification problem as well. We can split the possible values of the quality of wine (currently a numerical score between 0 and 10) into two bands representing two quality labels. 
+For example, values between 0-6 could represent 'bad' wine, while values between 7-10 could represent 'good' wine. Once again, we have over 11 different variables to consider for our model. 
 
-Thereafter, we would use stepwise regression to find the significant variables, and we would use both forward selection and backward elimination for p-values.
+We will then use logistic regression or a binary decision tree to construct our model. 
 
 **Research Question 3:**  
-Given the significant predictors that we find in research question 2, are we able to predict the quality of the wine? This means splitting it into 1) red wine, 2) white wine, and 3) wine (both types) in general
 
-Intended Approach:  
-Again, we will be using the bands used in Question 2 to do a binary classification problem. We can use logistic regression or decision trees to construct the prediction model. The outcome variable is a binary one, so we chose logistic regression or decision trees since they both methods for binary classification.
+*Can we identify the most significant predictors in terms of chemical compounds that make a good red wine or white wine? Are the predictors mostly the same for the two kinds of wine, or are they different?* 
+
+In this follow-up to the previous question, we intend to explore if the significant chemical parameters that make a good red wine are the same as those that make a good white wine. Are they mostly the same? Are they mostly different? How much do they 
+influence the qualities of the two kinds of wine? 
+
+Intended Approach: 
+This is contingent on what we end up using for our second research question. If we use the logistic regression, we might want to do a stepwise regression process and look at the significant p-values for the slopes in the systematic component of our model. If we 
+use decision trees instead, we might want to create two trees -- one for each kind of wine -- and look at what parameters determine the branching of the trees at different levels. 
+
+
 
 ### EDA
 
@@ -113,27 +121,26 @@ summary(wine_data)
 ```
 
 **Research Question 1:**  
-By looking at the 12 input variables in the data set which represent the concentration of the chemical compounds, are we able to predict whether the wine is red or white?
+
+Can we predict with good accuracy the kind of wine (red or white) by looking at the concentrations of various chemical compounds in them, as given in the dataset? 
 
 ```{r}
-
 #box-and-whiskers plot for each variable by type
-
 par(mfrow=c(2,3))
 
 for(i in 1:11){
   boxplot(wine_data[,i] ~wine_data$type, ylab = names(wine_data)[i])
 }
-
 ```
 
-Based on the boxplots for each variable split by type, we can see that there are some concentrations of chemical compounds that we can use to separate red wines and white wines. For example, the fixed acidity, volatile acidity, residual sugar, chlorides, free sulfur dioxide, total sulfur dioxide, density and sulphates have inter-quartile ranges that are fairly different. Thus, they would probably be good predictors for the classification problem. We can tentatively put them as the predictors (8 of them) we are going to use, but we do not want to eliminate any of the 12 just yet before doing more analysis.
+Looking at the boxplots for each variable split by type, we can see that there are some concentrations of chemical compounds that we can use to separate red wines and white wines. For example, the fixed acidity, volatile acidity, residual sugar, chlorides, free sulfur dioxide, total sulfur dioxide, density and sulphates have inter-quartile ranges that are fairly different. Thus, they would probably be good predictors for the classification problem. We can tentatively put them as the predictors (8 of them) we are going to use, but we do not want to eliminate any of the 12 just yet before doing more analysis.
 
 While individually they might be good predictors, using many input variables would help us build a model is a more accurate at predicting whether it is a red wine or white wine based on the chemical compounds. 
 Thus, we consider a generalized linear model using logistic regression, and we also want to compare the results using a non-linear model like decision trees.
 
 **Research Question 2:**  
-What are the significant predictors (in terms of concentration of chemical compounds) for 1) high quality red wine, 2) high quality white wine, and 3) high quality wine (both types) in general?  
+
+Can we predict with good accuracy the quality of wine for both the red and the white varieties by considering the concentrations of various chemical compounds in them? 
 
 ```{r}
 
@@ -168,7 +175,6 @@ Based on the boxplots for each variable split by type, we can see that there are
 #box-and-whiskers plot for each variable by type
 
 par(mfrow=c(2,3))
-
 for(i in 1:11){
   boxplot(whitewine_data[,i] ~ whitewine_data$qual_above_med, ylab = names(whitewine_data)[i])
 }
@@ -193,7 +199,12 @@ for(i in 1:11){
 
 Based on the boxplots for each variable split by type, we can see that only the density and alcohol level have inter-quartile ranges that are fairly different. Thus, these two variables are probaby good predictors for classifying good wines and bad wines. 
 
+
+
 **Research Question 3:**  
+
+Can we identify the most significant predictors in terms of chemical compounds that make a good red wine or white wine? Are the predictors mostly the same for the two kinds of wine, or are they different? 
+
 
 The EDA for research question 3 is the same as research question 2, since it is a natural follow-up to research question 2.
 

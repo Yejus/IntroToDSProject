@@ -32,34 +32,38 @@ Output variable (based on sensory data):
 The dataset is from https://archive.ics.uci.edu/ml/datasets/wine+quality and is donated to the UCI Machine Learning Repository. It is available for use on this project by including the following citation:  
 
 P. Cortez, A. Cerdeira, F. Almeida, T. Matos and J. Reis.
-Modeling wine preferences by data mining from physicochemical properties. In Decision Support Systems, Elsevier, 47(4):547-553, 2009.
+Modeling wine preferences by data mining from physicochemical properties. In Decision Support Systems, Elsevier, 47(4):547-553, 2009.  
+
 
 ### Research Questions 
 
 **Research questions: (6 points) Come up with at least three research questions that you want to answer using these data. Make sure that at least two of these questions involve at least three variables. You are welcomed to create new variables based on existing ones. Note that you will have the option to update / revise / change these questions for your presentation at the end of the semester.**
 
 **Research Question 1:**  
-Just knowing the concentration of the chemical compounds, are we able to predict whether they are red wine or white wines?
+By looking at the 12 input variables in the data set which represent the concentration of the chemical compounds, are we able to predict whether the wine is red or white?
 
-We will use logistic regression or decision trees to do so.
+Intended Approach:  
+We can use logistic regression or decision trees to construct the prediction model.  
 
 **Research Question 2:**  
-Predict quality of wine using regression (lasso) for red and white separately, as well as together
+By looking at the 12 input variables in the data set which represent the concentration of the chemical compounds, are we able to predict the quality of the wine?  
+This research question will be explored by three different subsets of data: 1) red wines only; 2) white wines only; and 3) both red and white wines. 
 
-- can split into bands (bad, good) or more 
-- add label column 
+Intended Approach:  
+We can split the possible values of the quality of wine (0 - 10) into bands where each range will represent a class label. For example, values between 0-5 could represent 'bad' wine, while values between 6-10 could represent 'good' wine. We will then use logistic regression or decision trees to construct the prediction model.   
 
 **Research Question 3:**  
-Clustering after finding the significant variables using stepwise regression.
+Are there any underlying patterns within the dataset that are not obvious?  
 
--- scatterplot matrix? 
+Intended Approach:  
+We can first perform variable selection using stepwise regression, after which we can perform k-means clustering and interpret the results.  
 
 
 ### EDA
 
 **EDA: (9 points) Perform exploratory data analysis (EDA) that addresses, but not necessarily fully answers, each of the three research questions you outlined above. Your EDA should contain numerical summaries and visualizations. Each R output or plot should be accompanied by a brief interpretation. Do not use more than 2 plots per research question.**
 
-
+**General EDA**
 ```{r}
 ## Data and necessary libraries
 
@@ -81,12 +85,20 @@ wine_data <- rbind(redwine_data, whitewine_data)
 ```
 
 ```{r}
-
 summary(redwine_data)
 summary(whitewine_data)
 summary(wine_data)
-
 ```
+
+
+**Research Question 1:**  
+By looking at the 12 input variables in the data set which represent the concentration of the chemical compounds, are we able to predict whether the wine is red or white?
+
+
+
+**Research Question 2:**  
+By looking at the 12 input variables in the data set which represent the concentration of the chemical compounds, are we able to predict the quality of the wine?  
+This research question will be explored by three different subsets of data: 1) red wines only; 2) white wines only; and 3) both red and white wines.  
 
 ```{r}
 pairs(redwine_data[,c(1:12)])

@@ -112,23 +112,65 @@ hist(redwine_data$quality)
 ### Timeline  
 **Timeline: (2 points) Sketch out a timeline for the work you will do each week to complete this project. Be realistic – discuss course schedules, travel plans, etc.**
 
-19-25 Oct:EDA, Refine Research Questions (by Wed), Begin Working on Research Questions and Deciding Methodology
-26-1 Nov: Team Check-in & Progress Update (Wed), Continue working on research questions 
-2-8 Nov: Team Check-in & Finalisation 
-9-13 Nov: Presentation 
+Our project would proceed in the following 3 stages:
+
+Stage 1: Proposal and Methodology
+
+Week 10: 19 - 25 October
+
+We will be working on the proposal, mainly on the EDA and thinking about the research questions for Wednesday's submission, and we will continue refining the research questions and the methodology to answer each research question for the rest of the week. Ideally, we would try and combine the research questions together to form a more nuanced research question that combines a few techniques.
+
+We assume that the feedback for the proposal will be back by Friday 23 October.
+
+Week 11: 26 October - 1 November
+
+For the start of Week 11, we will continue refining the research questions and decide on the methodology based on the feedback for the proposal. By Tuesday (27 October), we should have this finalized.
+
+Stage 2: Data Analysis
+
+Week 11: 26 October - 1 November
+
+For the second half of Week 11, we will begin doing the data analysis for the research question according to the methodology that we had set previously. By Friday (30 October), we will present initial results to each other for each of our subparts and decide on the next course of action.
+
+Week 12: 2 - 8 November
+
+We will continue doing data analysis based on the comments that we give each other during the initial results check-in the previous week. We would have another check-in on Tuesday or Wednesday (3-4 November) to present new findings. We will give comments to each other, but at this stage the analysis should be nearing completion. 
+
+If we do have any changes to make based on comments on Wednesday, we finalize the results by Friday. On Friday, we will have a small discussion on how best to visualize our results and who should take charge of which subsection of our project, which leads into our next stage.
+
+Stage 3: Presentation 
+
+Week 13: 9 - 13 November
+
+Based on the discussion we had on the presentation, we will work on our individual subparts until Tuesday on a shared slides document, updating each other along the way. On Tuesday and Wednesday, we will meet up to practice the presentation and to cohere our individual subparts together. Over the next few days, we will continuing doing so until we present on 13 November.
 
 Deadline: 13 Nov
 
 ### Teamwork  
 **Teamwork: (3 points) Describe in detail how you will divide up the work between team members and what aspects of the project you will complete together as a team. Note that during the presentation session each member needs to be able to answer questions about all aspects of the work, regardless of whether they took the lead on that section or not.**
 
-Data set-up / EDA - together
+Again, we discuss this section in terms of the 3 stages we outlined in our timeline.
 
-Q1 - two people
-Q2 - one person
-Q3 - one person 
+Stage 1: Proposal and Methodology
 
+We will be doing the data set-up and cleaning, as well as the EDA for the proposal together. Following the submission of the proposal, we will be continuing to work as a team to refine the research questions and confirm on the methodology for the research question. 
 
+Ideally, we would have at least two subsections for the research question, be it approaching it from different methods and then comparing or having multiple parts to the research question. For the rest of this section, we assume we have two subsections.
+
+Stage 2: Data Analysis
+
+Assuming two subsections, we will be splitting it up into two smaller teams:
+
+- Subsection 1: two people
+- Subsection 2: two people
+
+We would be deciding this based on interest once we finalize the methodology. That means that each subsection has two people taking charge. Even so, we would have regular check-ins (Tuesdays/ Wednesdays and Fridays) to keep each other updated and to give each other comments. This ensures that each team member knows what is going on for the entire project.
+
+Stage 3: Presentation 
+
+The initial stages for the preparation for the presentation would be done by the subsections decided above. These initial stages refer to expressing the results in terms of nice visuals.
+
+Once we meet on Tuesday or Wednesday, we would be working together to combine the presentation into a coherent narrative.
 
 
 

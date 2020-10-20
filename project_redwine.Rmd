@@ -1,6 +1,8 @@
 ---
-title: "project_redwine"
+title: Introduction to Data Science Final Project 
+subtitle: Project Wine
 output: html_document
+author: Jonas, Eddie, Rishav, Anant
 ---
 
 ```{r setup, include=FALSE}

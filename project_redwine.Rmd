@@ -97,7 +97,7 @@ pairs(whitewine_data[,c(1:12)])
 ```
 
 ```{r}
-# pairs(wine_data[,c(1:12)])
+pairs(wine_data[,c(1:12)])
 
 ```
 
@@ -130,7 +130,7 @@ Stage 2: Data Analysis
 
 Week 11: 26 October - 1 November
 
-For the second half of Week 11, we will begin doing the data analysis for the research question according to the methodology that we had set previously. By Friday (30 October), we will present initial results to each other for each of our subparts and decide on the next course of action.
+For the second half of Week 11, we will begin doing the data analysis for the research questions according to the methodology that we had set previously. By Friday (30 October), we will present initial results to each other for each of our subparts and decide on the next course of action.
 
 Week 12: 2 - 8 November
 
@@ -153,18 +153,19 @@ Again, we discuss this section in terms of the 3 stages we outlined in our timel
 
 Stage 1: Proposal and Methodology
 
-We will be doing the data set-up and cleaning, as well as the EDA for the proposal together. Following the submission of the proposal, we will be continuing to work as a team to refine the research questions and confirm on the methodology for the research question. 
+We will be doing the data set-up and cleaning, as well as the EDA for the proposal together. Following the submission of the proposal, we will be continuing to work as a team to refine the research questions and confirm on the methodology for the research question together as a team. 
 
-Ideally, we would have at least two subsections for the research question, be it approaching it from different methods and then comparing or having multiple parts to the research question. For the rest of this section, we assume we have two subsections.
+Ideally, we would have at least three subsections for the three research questions that we submit for our proposal. For the rest of this section, we assume we have three subsections, one for each research question.
 
 Stage 2: Data Analysis
 
-Assuming two subsections, we will be splitting it up into two smaller teams:
+Assuming three subsections, we will be splitting it up into two smaller teams:
 
 - Subsection 1: two people
-- Subsection 2: two people
+- Subsection 2: one people
+- Subsection 2: one people
 
-We would be deciding this based on interest once we finalize the methodology. That means that each subsection has two people taking charge. Even so, we would have regular check-ins (Tuesdays/ Wednesdays and Fridays) to keep each other updated and to give each other comments. This ensures that each team member knows what is going on for the entire project.
+We would be deciding this based on interest and which would take the most effort once we finalize the methodology. That means that each subsection has at least one person taking charge. Even so, we would have regular check-ins (Tuesdays/ Wednesdays and Fridays) to keep each other updated and to give each other comments. This ensures that each team member knows what is going on for the entire project.
 
 Stage 3: Presentation 
 

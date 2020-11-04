@@ -1,0 +1,1337 @@
+---
+title: Introduction to Data Science Final Project: Logistic Regression 
+subtitle: Project Wine
+output: html_document
+author: Jonas, Eddie, Rishav, Anant
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+```{r}
+#Loading in Data and necessary libraries
+
+redwine_data <- read.csv("winequality-red.csv")
+whitewine_data <- read.csv2("winequality-white.csv")
+
+whitewine_data[] <- lapply(whitewine_data, function(x) {
+    if(is.factor(x)) {
+      as.numeric(as.character(x))
+      }
+  else x
+})
+sapply(whitewine_data, class)
+
+redwine_data$type <- "red"
+whitewine_data$type <- "white"
+
+wine_data <- rbind(redwine_data, whitewine_data)
+```
+
+```{r}
+
+#Split into good and bad band (above 6 since 6 is the median)
+
+redwine_data$qual_above_med <- (redwine_data$quality > 6)
+whitewine_data$qual_above_med <- (whitewine_data$quality > 6)
+wine_data$qual_above_med <- (wine_data$quality > 6)
+
+```
+
+Red Wine
+
+Backward Elimination
+
+Use a p_val of 0.001
+
+```{r}
+
+red_lr <- glm(formula = redwine_data$qual_above_med ~ 
+                redwine_data$fixed.acidity + redwine_data$volatile.acidity + redwine_data$citric.acid
+              + redwine_data$residual.sugar + redwine_data$chlorides + redwine_data$free.sulfur.dioxide
+              + redwine_data$total.sulfur.dioxide + redwine_data$density + redwine_data$pH 
+              + redwine_data$sulphates + redwine_data$alcohol,
+              family = binomial(link="logit"))
+
+summary(red_lr)
+
+```
+
+As we can see pH has the highest p-val of 0.822327.
+
+```{r}
+
+red_lr_2 <- glm(formula = redwine_data$qual_above_med ~ 
+                redwine_data$fixed.acidity + redwine_data$volatile.acidity + redwine_data$citric.acid
+              + redwine_data$residual.sugar + redwine_data$chlorides + redwine_data$free.sulfur.dioxide
+              + redwine_data$total.sulfur.dioxide + redwine_data$density
+              + redwine_data$sulphates + redwine_data$alcohol,
+              family = binomial(link="logit"))
+
+summary(red_lr_2)
+
+```
+
+As we can see citric acid has the highest p-val of 0.517160.
+
+```{r}
+
+red_lr_3 <- glm(formula = redwine_data$qual_above_med ~ 
+                redwine_data$fixed.acidity + redwine_data$volatile.acidity 
+              + redwine_data$residual.sugar + redwine_data$chlorides + redwine_data$free.sulfur.dioxide
+              + redwine_data$total.sulfur.dioxide + redwine_data$density
+              + redwine_data$sulphates + redwine_data$alcohol,
+              family = binomial(link="logit"))
+
+summary(red_lr_3)
+
+```
+
+As we can see free sulfur dioxide has the highest p-val of 0.387455.
+
+```{r}
+
+red_lr_4 <- glm(formula = redwine_data$qual_above_med ~ 
+                redwine_data$fixed.acidity + redwine_data$volatile.acidity 
+              + redwine_data$residual.sugar + redwine_data$chlorides 
+              + redwine_data$total.sulfur.dioxide + redwine_data$density
+              + redwine_data$sulphates + redwine_data$alcohol,
+              family = binomial(link="logit"))
+
+summary(red_lr_4)
+
+```
+
+if we were to use 0.05 or 0.01, stop here.
+
+As we can see chlorides has the highest p-val of 0.009593.
+
+```{r}
+
+red_lr_5 <- glm(formula = redwine_data$qual_above_med ~ 
+                redwine_data$fixed.acidity + redwine_data$volatile.acidity 
+              + redwine_data$residual.sugar
+              + redwine_data$total.sulfur.dioxide + redwine_data$density
+              + redwine_data$sulphates + redwine_data$alcohol,
+              family = binomial(link="logit"))
+
+summary(red_lr_5)
+
+```
+
+As we can see density has the highest p-val of 0.004760.
+
+```{r}
+
+red_lr_6 <- glm(formula = redwine_data$qual_above_med ~ 
+                redwine_data$fixed.acidity + redwine_data$volatile.acidity 
+              + redwine_data$residual.sugar
+              + redwine_data$total.sulfur.dioxide 
+              + redwine_data$sulphates + redwine_data$alcohol,
+              family = binomial(link="logit"))
+
+summary(red_lr_6)
+
+```
+
+As we can see residual sugar has the highest p-val of 0.066968.
+
+```{r}
+
+red_lr_7 <- glm(formula = redwine_data$qual_above_med ~ 
+                redwine_data$fixed.acidity + redwine_data$volatile.acidity 
+              + redwine_data$total.sulfur.dioxide 
+              + redwine_data$sulphates + redwine_data$alcohol,
+              family = binomial(link="logit"))
+
+summary(red_lr_7)
+
+```
+
+As we can see fixed acidity has the highest p-val of 0.01297.
+
+```{r}
+
+
+red_lr_8 <- glm(formula = redwine_data$qual_above_med ~ 
+                redwine_data$volatile.acidity 
+              + redwine_data$total.sulfur.dioxide 
+              + redwine_data$sulphates + redwine_data$alcohol,
+              family = binomial(link="logit"))
+
+summary(red_lr_8)
+
+
+```
+
+Forward selection
+
+redwine_data$fixed.acidity + redwine_data$volatile.acidity + redwine_data$citric.acid
+              + redwine_data$residual.sugar + redwine_data$chlorides + redwine_data$free.sulfur.dioxide
+              + redwine_data$total.sulfur.dioxide + redwine_data$density + redwine_data$pH 
+              + redwine_data$sulphates + redwine_data$alcohol
+
+```{r}
+
+red_lr_fs1_1 <- glm(formula = redwine_data$qual_above_med ~ redwine_data$fixed.acidity,
+              family = binomial(link="logit"))
+
+red_lr_fs1_2 <- glm(formula = redwine_data$qual_above_med ~ redwine_data$volatile.acidity,
+              family = binomial(link="logit"))
+
+red_lr_fs1_3 <- glm(formula = redwine_data$qual_above_med ~ redwine_data$citric.acid,
+              family = binomial(link="logit"))
+
+red_lr_fs1_4 <- glm(formula = redwine_data$qual_above_med ~ redwine_data$residual.sugar,
+              family = binomial(link="logit"))
+
+red_lr_fs1_5 <- glm(formula = redwine_data$qual_above_med ~ redwine_data$chlorides,
+              family = binomial(link="logit"))
+
+red_lr_fs1_6 <- glm(formula = redwine_data$qual_above_med ~ redwine_data$free.sulfur.dioxide,
+              family = binomial(link="logit"))
+
+red_lr_fs1_7 <- glm(formula = redwine_data$qual_above_med ~ redwine_data$total.sulfur.dioxide,
+              family = binomial(link="logit"))
+
+red_lr_fs1_8 <- glm(formula = redwine_data$qual_above_med ~ redwine_data$density,
+              family = binomial(link="logit"))
+
+red_lr_fs1_9 <- glm(formula = redwine_data$qual_above_med ~ redwine_data$pH,
+              family = binomial(link="logit"))
+
+red_lr_fs1_10 <- glm(formula = redwine_data$qual_above_med ~ redwine_data$sulphates,
+              family = binomial(link="logit"))
+
+red_lr_fs1_11 <- glm(formula = redwine_data$qual_above_med ~ redwine_data$alcohol,
+              family = binomial(link="logit"))
+
+summary(red_lr_fs1_1)$coef
+summary(red_lr_fs1_2)$coef
+summary(red_lr_fs1_3)$coef
+summary(red_lr_fs1_4)$coef
+summary(red_lr_fs1_5)$coef
+summary(red_lr_fs1_6)$coef
+summary(red_lr_fs1_7)$coef
+summary(red_lr_fs1_8)$coef
+summary(red_lr_fs1_9)$coef
+summary(red_lr_fs1_10)$coef
+summary(red_lr_fs1_11)$coef
+
+```
+
+lowest pval is alcohol with 9.756085e-45.
+
+```{r}
+
+red_lr_fs2_1 <- glm(formula = redwine_data$qual_above_med ~ redwine_data$alcohol + redwine_data$fixed.acidity,
+              family = binomial(link="logit"))
+
+red_lr_fs2_2 <- glm(formula = redwine_data$qual_above_med ~ redwine_data$alcohol + redwine_data$volatile.acidity,
+              family = binomial(link="logit"))
+
+red_lr_fs2_3 <- glm(formula = redwine_data$qual_above_med ~ redwine_data$alcohol + redwine_data$citric.acid,
+              family = binomial(link="logit"))
+
+red_lr_fs2_4 <- glm(formula = redwine_data$qual_above_med ~ redwine_data$alcohol + redwine_data$residual.sugar,
+              family = binomial(link="logit"))
+
+red_lr_fs2_5 <- glm(formula = redwine_data$qual_above_med ~ redwine_data$alcohol + redwine_data$chlorides,
+              family = binomial(link="logit"))
+
+red_lr_fs2_6 <- glm(formula = redwine_data$qual_above_med ~ redwine_data$alcohol + redwine_data$free.sulfur.dioxide,
+              family = binomial(link="logit"))
+
+red_lr_fs2_7 <- glm(formula = redwine_data$qual_above_med ~ redwine_data$alcohol + redwine_data$total.sulfur.dioxide,
+              family = binomial(link="logit"))
+
+red_lr_fs2_8 <- glm(formula = redwine_data$qual_above_med ~ redwine_data$alcohol + redwine_data$density,
+              family = binomial(link="logit"))
+
+red_lr_fs2_9 <- glm(formula = redwine_data$qual_above_med ~ redwine_data$alcohol + redwine_data$pH,
+              family = binomial(link="logit"))
+
+red_lr_fs2_10 <- glm(formula = redwine_data$qual_above_med ~ redwine_data$alcohol + redwine_data$sulphates,
+              family = binomial(link="logit"))
+
+
+summary(red_lr_fs2_1)$coef
+summary(red_lr_fs2_2)$coef
+summary(red_lr_fs2_3)$coef
+summary(red_lr_fs2_4)$coef
+summary(red_lr_fs2_5)$coef
+summary(red_lr_fs2_6)$coef
+summary(red_lr_fs2_7)$coef
+summary(red_lr_fs2_8)$coef
+summary(red_lr_fs2_9)$coef
+summary(red_lr_fs2_10)$coef
+
+```
+
+lowest pval is volatile.acidity with 6.580944e-16
+
+```{r}
+
+red_lr_fs3_1 <- glm(formula = redwine_data$qual_above_med ~ redwine_data$alcohol + redwine_data$volatile.acidity + redwine_data$fixed.acidity,
+              family = binomial(link="logit"))
+
+red_lr_fs3_2 <- glm(formula = redwine_data$qual_above_med ~ redwine_data$alcohol + redwine_data$volatile.acidity + redwine_data$citric.acid,
+              family = binomial(link="logit"))
+
+red_lr_fs3_3 <- glm(formula = redwine_data$qual_above_med ~ redwine_data$alcohol + redwine_data$volatile.acidity + redwine_data$residual.sugar,
+              family = binomial(link="logit"))
+
+red_lr_fs3_4 <- glm(formula = redwine_data$qual_above_med ~ redwine_data$alcohol + redwine_data$volatile.acidity + redwine_data$chlorides,
+              family = binomial(link="logit"))
+
+red_lr_fs3_5 <- glm(formula = redwine_data$qual_above_med ~ redwine_data$alcohol + redwine_data$volatile.acidity + redwine_data$free.sulfur.dioxide,
+              family = binomial(link="logit"))
+
+red_lr_fs3_6 <- glm(formula = redwine_data$qual_above_med ~ redwine_data$alcohol + redwine_data$volatile.acidity + redwine_data$total.sulfur.dioxide,
+              family = binomial(link="logit"))
+
+red_lr_fs3_7 <- glm(formula = redwine_data$qual_above_med ~ redwine_data$alcohol + redwine_data$volatile.acidity + redwine_data$density,
+              family = binomial(link="logit"))
+
+red_lr_fs3_8 <- glm(formula = redwine_data$qual_above_med ~ redwine_data$alcohol + redwine_data$volatile.acidity + redwine_data$pH,
+              family = binomial(link="logit"))
+
+red_lr_fs3_9 <- glm(formula = redwine_data$qual_above_med ~ redwine_data$alcohol + redwine_data$volatile.acidity + redwine_data$sulphates,
+              family = binomial(link="logit"))
+
+
+summary(red_lr_fs3_1)$coef
+summary(red_lr_fs3_2)$coef
+summary(red_lr_fs3_3)$coef
+summary(red_lr_fs3_4)$coef
+summary(red_lr_fs3_5)$coef
+summary(red_lr_fs3_6)$coef
+summary(red_lr_fs3_7)$coef
+summary(red_lr_fs3_8)$coef
+summary(red_lr_fs3_9)$coef
+
+```
+
+lowest pval is sulphates with 4.477509e-09
+
+```{r}
+
+red_lr_fs4_1 <- glm(formula = redwine_data$qual_above_med ~ redwine_data$alcohol + redwine_data$volatile.acidity + redwine_data$sulphates + redwine_data$fixed.acidity,
+              family = binomial(link="logit"))
+
+red_lr_fs4_2 <- glm(formula = redwine_data$qual_above_med ~ redwine_data$alcohol + redwine_data$volatile.acidity + redwine_data$sulphates + redwine_data$citric.acid,
+              family = binomial(link="logit"))
+
+red_lr_fs4_3 <- glm(formula = redwine_data$qual_above_med ~ redwine_data$alcohol + redwine_data$volatile.acidity + redwine_data$sulphates + redwine_data$residual.sugar,
+              family = binomial(link="logit"))
+
+red_lr_fs4_4 <- glm(formula = redwine_data$qual_above_med ~ redwine_data$alcohol + redwine_data$volatile.acidity + redwine_data$sulphates + redwine_data$chlorides,
+              family = binomial(link="logit"))
+
+red_lr_fs4_5 <- glm(formula = redwine_data$qual_above_med ~ redwine_data$alcohol + redwine_data$volatile.acidity + redwine_data$sulphates + redwine_data$free.sulfur.dioxide,
+              family = binomial(link="logit"))
+
+red_lr_fs4_6 <- glm(formula = redwine_data$qual_above_med ~ redwine_data$alcohol + redwine_data$volatile.acidity + redwine_data$sulphates + redwine_data$total.sulfur.dioxide,
+              family = binomial(link="logit"))
+
+red_lr_fs4_7 <- glm(formula = redwine_data$qual_above_med ~ redwine_data$alcohol + redwine_data$volatile.acidity + redwine_data$sulphates + redwine_data$density,
+              family = binomial(link="logit"))
+
+red_lr_fs4_8 <- glm(formula = redwine_data$qual_above_med ~ redwine_data$alcohol + redwine_data$volatile.acidity + redwine_data$sulphates + redwine_data$pH,
+              family = binomial(link="logit"))
+
+
+
+summary(red_lr_fs4_1)$coef
+summary(red_lr_fs4_2)$coef
+summary(red_lr_fs4_3)$coef
+summary(red_lr_fs4_4)$coef
+summary(red_lr_fs4_5)$coef
+summary(red_lr_fs4_6)$coef
+summary(red_lr_fs4_7)$coef
+summary(red_lr_fs4_8)$coef
+
+```
+
+lowest pval is total.sulfur.dioxide with 1.276479e-04
+
+```{r}
+
+red_lr_fs5_1 <- glm(formula = redwine_data$qual_above_med ~ redwine_data$alcohol + redwine_data$volatile.acidity + redwine_data$sulphates + redwine_data$total.sulfur.dioxide + redwine_data$fixed.acidity,
+              family = binomial(link="logit"))
+
+red_lr_fs5_2 <- glm(formula = redwine_data$qual_above_med ~ redwine_data$alcohol + redwine_data$volatile.acidity + redwine_data$sulphates + redwine_data$total.sulfur.dioxide + redwine_data$citric.acid,
+              family = binomial(link="logit"))
+
+red_lr_fs5_3 <- glm(formula = redwine_data$qual_above_med ~ redwine_data$alcohol + redwine_data$volatile.acidity + redwine_data$sulphates + redwine_data$total.sulfur.dioxide + redwine_data$residual.sugar,
+              family = binomial(link="logit"))
+
+red_lr_fs5_4 <- glm(formula = redwine_data$qual_above_med ~ redwine_data$alcohol + redwine_data$volatile.acidity + redwine_data$sulphates + redwine_data$total.sulfur.dioxide + redwine_data$chlorides,
+              family = binomial(link="logit"))
+
+red_lr_fs5_5 <- glm(formula = redwine_data$qual_above_med ~ redwine_data$alcohol + redwine_data$volatile.acidity + redwine_data$sulphates + redwine_data$total.sulfur.dioxide + redwine_data$free.sulfur.dioxide,
+              family = binomial(link="logit"))
+
+red_lr_fs5_6 <- glm(formula = redwine_data$qual_above_med ~ redwine_data$alcohol + redwine_data$volatile.acidity + redwine_data$sulphates + redwine_data$total.sulfur.dioxide + redwine_data$density,
+              family = binomial(link="logit"))
+
+red_lr_fs5_7 <- glm(formula = redwine_data$qual_above_med ~ redwine_data$alcohol + redwine_data$volatile.acidity + redwine_data$sulphates + redwine_data$total.sulfur.dioxide + redwine_data$pH,
+              family = binomial(link="logit"))
+
+
+
+summary(red_lr_fs5_1)$coef
+summary(red_lr_fs5_2)$coef
+summary(red_lr_fs5_3)$coef
+summary(red_lr_fs5_4)$coef
+summary(red_lr_fs5_5)$coef
+summary(red_lr_fs5_6)$coef
+summary(red_lr_fs5_7)$coef
+```
+
+All p val above 0.001, so we can stop here. If we use 0.05, we continue:
+
+lowest pval is fixed.acidity with 1.297407e-02
+
+```{r}
+
+red_lr_fs6_1 <- glm(formula = redwine_data$qual_above_med ~ redwine_data$alcohol + redwine_data$volatile.acidity + redwine_data$sulphates + redwine_data$total.sulfur.dioxide + redwine_data$fixed.acidity + redwine_data$citric.acid,
+              family = binomial(link="logit"))
+
+red_lr_fs6_2 <- glm(formula = redwine_data$qual_above_med ~ redwine_data$alcohol + redwine_data$volatile.acidity + redwine_data$sulphates + redwine_data$total.sulfur.dioxide + redwine_data$fixed.acidity + redwine_data$residual.sugar,
+              family = binomial(link="logit"))
+
+red_lr_fs6_3 <- glm(formula = redwine_data$qual_above_med ~ redwine_data$alcohol + redwine_data$volatile.acidity + redwine_data$sulphates + redwine_data$total.sulfur.dioxide + redwine_data$fixed.acidity + redwine_data$chlorides,
+              family = binomial(link="logit"))
+
+red_lr_fs6_4 <- glm(formula = redwine_data$qual_above_med ~ redwine_data$alcohol + redwine_data$volatile.acidity + redwine_data$sulphates + redwine_data$total.sulfur.dioxide + redwine_data$fixed.acidity + redwine_data$free.sulfur.dioxide,
+              family = binomial(link="logit"))
+
+red_lr_fs6_5 <- glm(formula = redwine_data$qual_above_med ~ redwine_data$alcohol + redwine_data$volatile.acidity + redwine_data$sulphates + redwine_data$total.sulfur.dioxide + redwine_data$fixed.acidity + redwine_data$density,
+              family = binomial(link="logit"))
+
+red_lr_fs6_6 <- glm(formula = redwine_data$qual_above_med ~ redwine_data$alcohol + redwine_data$volatile.acidity + redwine_data$sulphates + redwine_data$total.sulfur.dioxide + redwine_data$fixed.acidity + redwine_data$pH,
+              family = binomial(link="logit"))
+
+
+
+summary(red_lr_fs6_1)$coef
+summary(red_lr_fs6_2)$coef
+summary(red_lr_fs6_3)$coef
+summary(red_lr_fs6_4)$coef
+summary(red_lr_fs6_5)$coef
+summary(red_lr_fs6_6)$coef
+
+```
+
+lowest pval is chlorides with 9.913224e-03
+
+```{r}
+
+red_lr_fs7_1 <- glm(formula = redwine_data$qual_above_med ~ redwine_data$alcohol + redwine_data$volatile.acidity + redwine_data$sulphates + redwine_data$total.sulfur.dioxide + redwine_data$fixed.acidity + redwine_data$chlorides + redwine_data$citric.acid,
+              family = binomial(link="logit"))
+
+red_lr_fs7_2 <- glm(formula = redwine_data$qual_above_med ~ redwine_data$alcohol + redwine_data$volatile.acidity + redwine_data$sulphates + redwine_data$total.sulfur.dioxide + redwine_data$fixed.acidity + redwine_data$chlorides + redwine_data$residual.sugar,
+              family = binomial(link="logit"))
+
+red_lr_fs7_3 <- glm(formula = redwine_data$qual_above_med ~ redwine_data$alcohol + redwine_data$volatile.acidity + redwine_data$sulphates + redwine_data$total.sulfur.dioxide + redwine_data$fixed.acidity + redwine_data$chlorides + redwine_data$free.sulfur.dioxide,
+              family = binomial(link="logit"))
+
+red_lr_fs7_4 <- glm(formula = redwine_data$qual_above_med ~ redwine_data$alcohol + redwine_data$volatile.acidity + redwine_data$sulphates + redwine_data$total.sulfur.dioxide + redwine_data$fixed.acidity + redwine_data$chlorides + redwine_data$density,
+              family = binomial(link="logit"))
+
+red_lr_fs7_5 <- glm(formula = redwine_data$qual_above_med ~ redwine_data$alcohol + redwine_data$volatile.acidity + redwine_data$sulphates + redwine_data$total.sulfur.dioxide + redwine_data$fixed.acidity + redwine_data$chlorides + redwine_data$pH,
+              family = binomial(link="logit"))
+
+
+
+summary(red_lr_fs7_1)$coef
+summary(red_lr_fs7_2)$coef
+summary(red_lr_fs7_3)$coef
+summary(red_lr_fs7_4)$coef
+summary(red_lr_fs7_5)$coef
+
+
+```
+
+lowest pval is residual.sugar with 2.935453e-02
+
+```{r}
+
+red_lr_fs8_1 <- glm(formula = redwine_data$qual_above_med ~ redwine_data$alcohol + redwine_data$volatile.acidity + redwine_data$sulphates + redwine_data$total.sulfur.dioxide + redwine_data$fixed.acidity + redwine_data$chlorides + redwine_data$residual.sugar + redwine_data$citric.acid,
+              family = binomial(link="logit"))
+
+red_lr_fs8_2 <- glm(formula = redwine_data$qual_above_med ~ redwine_data$alcohol + redwine_data$volatile.acidity + redwine_data$sulphates + redwine_data$total.sulfur.dioxide + redwine_data$fixed.acidity + redwine_data$chlorides + redwine_data$residual.sugar + redwine_data$free.sulfur.dioxide,
+              family = binomial(link="logit"))
+
+red_lr_fs8_3 <- glm(formula = redwine_data$qual_above_med ~ redwine_data$alcohol + redwine_data$volatile.acidity + redwine_data$sulphates + redwine_data$total.sulfur.dioxide + redwine_data$fixed.acidity + redwine_data$chlorides + redwine_data$residual.sugar + redwine_data$density,
+              family = binomial(link="logit"))
+
+red_lr_fs8_4 <- glm(formula = redwine_data$qual_above_med ~ redwine_data$alcohol + redwine_data$volatile.acidity + redwine_data$sulphates + redwine_data$total.sulfur.dioxide + redwine_data$fixed.acidity + redwine_data$chlorides + redwine_data$residual.sugar + redwine_data$pH,
+              family = binomial(link="logit"))
+
+
+
+summary(red_lr_fs8_1)$coef
+summary(red_lr_fs8_2)$coef
+summary(red_lr_fs8_3)$coef
+summary(red_lr_fs8_4)$coef
+
+```
+
+lowest pval is density with 8.835069e-03
+
+```{r}
+
+red_lr_fs9_1 <- glm(formula = redwine_data$qual_above_med ~ redwine_data$alcohol + redwine_data$volatile.acidity + redwine_data$sulphates + redwine_data$total.sulfur.dioxide + redwine_data$fixed.acidity + redwine_data$chlorides + redwine_data$residual.sugar + redwine_data$density + redwine_data$citric.acid,
+              family = binomial(link="logit"))
+
+red_lr_fs9_2 <- glm(formula = redwine_data$qual_above_med ~ redwine_data$alcohol + redwine_data$volatile.acidity + redwine_data$sulphates + redwine_data$total.sulfur.dioxide + redwine_data$fixed.acidity + redwine_data$chlorides + redwine_data$residual.sugar + redwine_data$density + redwine_data$free.sulfur.dioxide,
+              family = binomial(link="logit"))
+
+red_lr_fs9_3 <- glm(formula = redwine_data$qual_above_med ~ redwine_data$alcohol + redwine_data$volatile.acidity + redwine_data$sulphates + redwine_data$total.sulfur.dioxide + redwine_data$fixed.acidity + redwine_data$chlorides + redwine_data$residual.sugar + redwine_data$density + redwine_data$pH,
+              family = binomial(link="logit"))
+
+
+
+summary(red_lr_fs9_1)$coef
+summary(red_lr_fs9_2)$coef
+summary(red_lr_fs9_3)$coef
+
+```
+
+All pvals are above 0.05, so we stop here.
+
+White Wine
+
+Backward Elimination
+
+```{r}
+
+white_lr_1 <- glm(formula = whitewine_data$qual_above_med ~ 
+                whitewine_data$fixed.acidity + whitewine_data$volatile.acidity +
+                  whitewine_data$citric.acid + whitewine_data$residual.sugar + whitewine_data$chlorides +
+                  whitewine_data$free.sulfur.dioxide + whitewine_data$total.sulfur.dioxide +
+                  whitewine_data$density + whitewine_data$pH + whitewine_data$sulphates + 
+                  whitewine_data$alcohol,
+              family = binomial(link="logit"))
+
+summary(white_lr_1)
+
+```
+
+As we can see total.sulfur.dioxide has the highest p-val of 0.857936
+
+```{r}
+
+white_lr_2 <- glm(formula = whitewine_data$qual_above_med ~ 
+               whitewine_data$fixed.acidity + whitewine_data$volatile.acidity +
+                  whitewine_data$citric.acid + whitewine_data$residual.sugar + whitewine_data$chlorides +
+                  whitewine_data$free.sulfur.dioxide + whitewine_data$density + whitewine_data$pH + 
+                 whitewine_data$sulphates + whitewine_data$alcohol,
+              family = binomial(link="logit"))
+
+summary(white_lr_2)
+
+```
+
+As we can see alcohol has the highest p-val of 0.215846
+
+```{r}
+
+white_lr_3 <- glm(formula = whitewine_data$qual_above_med ~ 
+               whitewine_data$fixed.acidity + whitewine_data$volatile.acidity +
+                  whitewine_data$citric.acid + whitewine_data$residual.sugar + whitewine_data$chlorides +
+                  whitewine_data$free.sulfur.dioxide + whitewine_data$density + whitewine_data$pH + 
+                 whitewine_data$sulphates,
+              family = binomial(link="logit"))
+
+summary(white_lr_3)
+
+```
+
+As we can see citric.acid has the highest p-val of 0.081151
+
+```{r}
+
+white_lr_4 <- glm(formula = whitewine_data$qual_above_med ~ 
+               whitewine_data$fixed.acidity + whitewine_data$volatile.acidity + whitewine_data$residual.sugar + whitewine_data$chlorides +
+                  whitewine_data$free.sulfur.dioxide + whitewine_data$density + whitewine_data$pH + 
+                 whitewine_data$sulphates,
+              family = binomial(link="logit"))
+
+summary(white_lr_4)
+
+```
+
+If pval 0.05, stop here
+
+As we can see free.sulfur.dioxide has the highest p-val of 0.001118
+
+```{r}
+
+white_lr_5 <- glm(formula = whitewine_data$qual_above_med ~ 
+               whitewine_data$fixed.acidity + whitewine_data$volatile.acidity + whitewine_data$residual.sugar + whitewine_data$chlorides + whitewine_data$density + whitewine_data$pH + 
+                 whitewine_data$sulphates,
+              family = binomial(link="logit"))
+
+summary(white_lr_5)
+
+```
+
+As we can see chlorides has the highest p-val of 0.00133
+
+```{r}
+
+white_lr_6 <- glm(formula = whitewine_data$qual_above_med ~ 
+               whitewine_data$fixed.acidity + whitewine_data$volatile.acidity + whitewine_data$residual.sugar + whitewine_data$density + whitewine_data$pH + 
+                 whitewine_data$sulphates,
+              family = binomial(link="logit"))
+
+summary(white_lr_6)
+
+```
+
+All p-val below 0.001.
+
+Forward selection
+
+```{r}
+
+white_lr_fs1_1 <- glm(formula = whitewine_data$qual_above_med ~ whitewine_data$fixed.acidity,
+              family = binomial(link="logit"))
+
+white_lr_fs1_2 <- glm(formula = whitewine_data$qual_above_med ~ whitewine_data$volatile.acidity,
+              family = binomial(link="logit"))
+
+white_lr_fs1_3 <- glm(formula = whitewine_data$qual_above_med ~ whitewine_data$citric.acid,
+              family = binomial(link="logit"))
+
+white_lr_fs1_4 <- glm(formula = whitewine_data$qual_above_med ~ whitewine_data$residual.sugar,
+              family = binomial(link="logit"))
+
+white_lr_fs1_5 <- glm(formula = whitewine_data$qual_above_med ~ whitewine_data$chlorides,
+              family = binomial(link="logit"))
+
+white_lr_fs1_6 <- glm(formula = whitewine_data$qual_above_med ~ whitewine_data$free.sulfur.dioxide,
+              family = binomial(link="logit"))
+
+white_lr_fs1_7 <- glm(formula = whitewine_data$qual_above_med ~ whitewine_data$total.sulfur.dioxide,
+              family = binomial(link="logit"))
+
+white_lr_fs1_8 <- glm(formula = whitewine_data$qual_above_med ~ whitewine_data$density,
+              family = binomial(link="logit"))
+
+white_lr_fs1_9 <- glm(formula = whitewine_data$qual_above_med ~ whitewine_data$pH,
+              family = binomial(link="logit"))
+
+white_lr_fs1_10 <- glm(formula = whitewine_data$qual_above_med ~ whitewine_data$sulphates,
+              family = binomial(link="logit"))
+
+white_lr_fs1_11 <- glm(formula = whitewine_data$qual_above_med ~ whitewine_data$alcohol,
+              family = binomial(link="logit"))
+
+summary(white_lr_fs1_1)$coef
+summary(white_lr_fs1_2)$coef
+summary(white_lr_fs1_3)$coef
+summary(white_lr_fs1_4)$coef
+summary(white_lr_fs1_5)$coef
+summary(white_lr_fs1_6)$coef
+summary(white_lr_fs1_7)$coef
+summary(white_lr_fs1_8)$coef
+summary(white_lr_fs1_9)$coef
+summary(white_lr_fs1_10)$coef
+summary(white_lr_fs1_11)$coef
+
+```
+
+lowest pval is alcohol with 1.439734e-135.
+
+```{r}
+
+white_lr_fs2_1 <- glm(formula = whitewine_data$qual_above_med ~ whitewine_data$alcohol + whitewine_data$fixed.acidity,
+              family = binomial(link="logit"))
+
+white_lr_fs2_2 <- glm(formula = whitewine_data$qual_above_med ~ whitewine_data$alcohol + whitewine_data$volatile.acidity,
+              family = binomial(link="logit"))
+
+white_lr_fs2_3 <- glm(formula = whitewine_data$qual_above_med ~ whitewine_data$alcohol + whitewine_data$citric.acid,
+              family = binomial(link="logit"))
+
+white_lr_fs2_4 <- glm(formula = whitewine_data$qual_above_med ~ whitewine_data$alcohol + whitewine_data$residual.sugar,
+              family = binomial(link="logit"))
+
+white_lr_fs2_5 <- glm(formula = whitewine_data$qual_above_med ~ whitewine_data$alcohol + whitewine_data$chlorides,
+              family = binomial(link="logit"))
+
+white_lr_fs2_6 <- glm(formula = whitewine_data$qual_above_med ~ whitewine_data$alcohol + whitewine_data$free.sulfur.dioxide,
+              family = binomial(link="logit"))
+
+white_lr_fs2_7 <- glm(formula = whitewine_data$qual_above_med ~ whitewine_data$alcohol + whitewine_data$total.sulfur.dioxide,
+              family = binomial(link="logit"))
+
+white_lr_fs2_8 <- glm(formula = whitewine_data$qual_above_med ~ whitewine_data$alcohol + whitewine_data$density,
+              family = binomial(link="logit"))
+
+white_lr_fs2_9 <- glm(formula = whitewine_data$qual_above_med ~ whitewine_data$alcohol + whitewine_data$pH,
+              family = binomial(link="logit"))
+
+white_lr_fs2_10 <- glm(formula = whitewine_data$qual_above_med ~ whitewine_data$alcohol + whitewine_data$sulphates,
+              family = binomial(link="logit"))
+
+
+summary(white_lr_fs2_1)$coef
+summary(white_lr_fs2_2)$coef
+summary(white_lr_fs2_3)$coef
+summary(white_lr_fs2_4)$coef
+summary(white_lr_fs2_5)$coef
+summary(white_lr_fs2_6)$coef
+summary(white_lr_fs2_7)$coef
+summary(white_lr_fs2_8)$coef
+summary(white_lr_fs2_9)$coef
+summary(white_lr_fs2_10)$coef
+
+```
+
+lowest pval is volatile.acidity with 3.206406e-17.
+
+```{r}
+
+white_lr_fs3_1 <- glm(formula = whitewine_data$qual_above_med ~ whitewine_data$alcohol + whitewine_data$volatile.acidity + whitewine_data$fixed.acidity,
+              family = binomial(link="logit"))
+
+white_lr_fs3_2 <- glm(formula = whitewine_data$qual_above_med ~ whitewine_data$alcohol + whitewine_data$volatile.acidity + whitewine_data$citric.acid,
+              family = binomial(link="logit"))
+
+white_lr_fs3_3 <- glm(formula = whitewine_data$qual_above_med ~ whitewine_data$alcohol + whitewine_data$volatile.acidity + whitewine_data$residual.sugar,
+              family = binomial(link="logit"))
+
+white_lr_fs3_4 <- glm(formula = whitewine_data$qual_above_med ~ whitewine_data$alcohol + whitewine_data$volatile.acidity + whitewine_data$chlorides,
+              family = binomial(link="logit"))
+
+white_lr_fs3_5 <- glm(formula = whitewine_data$qual_above_med ~ whitewine_data$alcohol + whitewine_data$volatile.acidity + whitewine_data$free.sulfur.dioxide,
+              family = binomial(link="logit"))
+
+white_lr_fs3_6 <- glm(formula = whitewine_data$qual_above_med ~ whitewine_data$alcohol + whitewine_data$volatile.acidity + whitewine_data$total.sulfur.dioxide,
+              family = binomial(link="logit"))
+
+white_lr_fs3_7 <- glm(formula = whitewine_data$qual_above_med ~ whitewine_data$alcohol + whitewine_data$volatile.acidity + whitewine_data$density,
+              family = binomial(link="logit"))
+
+white_lr_fs3_8 <- glm(formula = whitewine_data$qual_above_med ~ whitewine_data$alcohol + whitewine_data$volatile.acidity + whitewine_data$pH,
+              family = binomial(link="logit"))
+
+white_lr_fs3_9 <- glm(formula = whitewine_data$qual_above_med ~ whitewine_data$alcohol + whitewine_data$volatile.acidity + whitewine_data$sulphates,
+              family = binomial(link="logit"))
+
+
+summary(white_lr_fs3_1)$coef
+summary(white_lr_fs3_2)$coef
+summary(white_lr_fs3_3)$coef
+summary(white_lr_fs3_4)$coef
+summary(white_lr_fs3_5)$coef
+summary(white_lr_fs3_6)$coef
+summary(white_lr_fs3_7)$coef
+summary(white_lr_fs3_8)$coef
+summary(white_lr_fs3_9)$coef
+
+```
+
+lowest pval is residual.sugar with 1.534664e-07.
+
+```{r}
+
+white_lr_fs4_1 <- glm(formula = whitewine_data$qual_above_med ~ whitewine_data$alcohol + whitewine_data$volatile.acidity + whitewine_data$residual.sugar + whitewine_data$fixed.acidity,
+              family = binomial(link="logit"))
+
+white_lr_fs4_2 <- glm(formula = whitewine_data$qual_above_med ~ whitewine_data$alcohol + whitewine_data$volatile.acidity + whitewine_data$residual.sugar + whitewine_data$citric.acid,
+              family = binomial(link="logit"))
+
+white_lr_fs4_3 <- glm(formula = whitewine_data$qual_above_med ~ whitewine_data$alcohol + whitewine_data$volatile.acidity + whitewine_data$residual.sugar + whitewine_data$chlorides,
+              family = binomial(link="logit"))
+
+white_lr_fs4_4 <- glm(formula = whitewine_data$qual_above_med ~ whitewine_data$alcohol + whitewine_data$volatile.acidity + whitewine_data$residual.sugar + whitewine_data$free.sulfur.dioxide,
+              family = binomial(link="logit"))
+
+white_lr_fs4_5 <- glm(formula = whitewine_data$qual_above_med ~ whitewine_data$alcohol + whitewine_data$volatile.acidity + whitewine_data$residual.sugar + whitewine_data$total.sulfur.dioxide,
+              family = binomial(link="logit"))
+
+white_lr_fs4_6 <- glm(formula = whitewine_data$qual_above_med ~ whitewine_data$alcohol + whitewine_data$volatile.acidity + whitewine_data$residual.sugar + whitewine_data$density,
+              family = binomial(link="logit"))
+
+white_lr_fs4_7 <- glm(formula = whitewine_data$qual_above_med ~ whitewine_data$alcohol + whitewine_data$volatile.acidity + whitewine_data$residual.sugar + whitewine_data$pH,
+              family = binomial(link="logit"))
+
+white_lr_fs4_8 <- glm(formula = whitewine_data$qual_above_med ~ whitewine_data$alcohol + whitewine_data$volatile.acidity + whitewine_data$residual.sugar + whitewine_data$sulphates,
+              family = binomial(link="logit"))
+
+
+summary(white_lr_fs4_1)$coef
+summary(white_lr_fs4_2)$coef
+summary(white_lr_fs4_3)$coef
+summary(white_lr_fs4_4)$coef
+summary(white_lr_fs4_5)$coef
+summary(white_lr_fs4_6)$coef
+summary(white_lr_fs4_7)$coef
+summary(white_lr_fs4_8)$coef
+
+```
+
+lowest pval is pH with 8.459236e-07
+
+```{r}
+
+white_lr_fs5_1 <- glm(formula = whitewine_data$qual_above_med ~ whitewine_data$alcohol + whitewine_data$volatile.acidity + whitewine_data$residual.sugar + whitewine_data$pH + whitewine_data$fixed.acidity,
+              family = binomial(link="logit"))
+
+white_lr_fs5_2 <- glm(formula = whitewine_data$qual_above_med ~ whitewine_data$alcohol + whitewine_data$volatile.acidity + whitewine_data$residual.sugar + whitewine_data$pH + whitewine_data$citric.acid,
+              family = binomial(link="logit"))
+
+white_lr_fs5_3 <- glm(formula = whitewine_data$qual_above_med ~ whitewine_data$alcohol + whitewine_data$volatile.acidity + whitewine_data$residual.sugar + whitewine_data$pH + whitewine_data$chlorides,
+              family = binomial(link="logit"))
+
+white_lr_fs5_4 <- glm(formula = whitewine_data$qual_above_med ~ whitewine_data$alcohol + whitewine_data$volatile.acidity + whitewine_data$residual.sugar + whitewine_data$pH + whitewine_data$free.sulfur.dioxide,
+              family = binomial(link="logit"))
+
+white_lr_fs5_5 <- glm(formula = whitewine_data$qual_above_med ~ whitewine_data$alcohol + whitewine_data$volatile.acidity + whitewine_data$residual.sugar + whitewine_data$pH + whitewine_data$total.sulfur.dioxide,
+              family = binomial(link="logit"))
+
+white_lr_fs5_6 <- glm(formula = whitewine_data$qual_above_med ~ whitewine_data$alcohol + whitewine_data$volatile.acidity + whitewine_data$residual.sugar + whitewine_data$pH + whitewine_data$density,
+              family = binomial(link="logit"))
+
+white_lr_fs5_7 <- glm(formula = whitewine_data$qual_above_med ~ whitewine_data$alcohol + whitewine_data$volatile.acidity + whitewine_data$residual.sugar + whitewine_data$pH + whitewine_data$sulphates,
+              family = binomial(link="logit"))
+
+
+summary(white_lr_fs5_1)$coef
+summary(white_lr_fs5_2)$coef
+summary(white_lr_fs5_3)$coef
+summary(white_lr_fs5_4)$coef
+summary(white_lr_fs5_5)$coef
+summary(white_lr_fs5_6)$coef
+summary(white_lr_fs5_7)$coef
+
+```
+
+lowest pval is chlorides with 1.664074e-06
+
+
+```{r}
+
+white_lr_fs6_1 <- glm(formula = whitewine_data$qual_above_med ~ whitewine_data$alcohol + whitewine_data$volatile.acidity + whitewine_data$residual.sugar + whitewine_data$pH + whitewine_data$chlorides + whitewine_data$fixed.acidity,
+              family = binomial(link="logit"))
+
+white_lr_fs6_2 <- glm(formula = whitewine_data$qual_above_med ~ whitewine_data$alcohol + whitewine_data$volatile.acidity + whitewine_data$residual.sugar + whitewine_data$pH + whitewine_data$chlorides + whitewine_data$citric.acid,
+              family = binomial(link="logit"))
+
+white_lr_fs6_3 <- glm(formula = whitewine_data$qual_above_med ~ whitewine_data$alcohol + whitewine_data$volatile.acidity + whitewine_data$residual.sugar + whitewine_data$pH + whitewine_data$chlorides + whitewine_data$free.sulfur.dioxide,
+              family = binomial(link="logit"))
+
+white_lr_fs6_4 <- glm(formula = whitewine_data$qual_above_med ~ whitewine_data$alcohol + whitewine_data$volatile.acidity + whitewine_data$residual.sugar + whitewine_data$pH + whitewine_data$chlorides + whitewine_data$total.sulfur.dioxide,
+              family = binomial(link="logit"))
+
+white_lr_fs6_5 <- glm(formula = whitewine_data$qual_above_med ~ whitewine_data$alcohol + whitewine_data$volatile.acidity + whitewine_data$residual.sugar + whitewine_data$pH + whitewine_data$chlorides + whitewine_data$density,
+              family = binomial(link="logit"))
+
+white_lr_fs6_6 <- glm(formula = whitewine_data$qual_above_med ~ whitewine_data$alcohol + whitewine_data$volatile.acidity + whitewine_data$residual.sugar + whitewine_data$pH + whitewine_data$chlorides + whitewine_data$sulphates,
+              family = binomial(link="logit"))
+
+
+summary(white_lr_fs6_1)$coef
+summary(white_lr_fs6_2)$coef
+summary(white_lr_fs6_3)$coef
+summary(white_lr_fs6_4)$coef
+summary(white_lr_fs6_5)$coef
+summary(white_lr_fs6_6)$coef
+
+```
+
+lowest pval is sulphates with 9.988478e-05
+
+```{r}
+
+white_lr_fs7_1 <- glm(formula = whitewine_data$qual_above_med ~ whitewine_data$alcohol + whitewine_data$volatile.acidity + whitewine_data$residual.sugar + whitewine_data$pH + whitewine_data$chlorides + whitewine_data$sulphates + whitewine_data$fixed.acidity,
+              family = binomial(link="logit"))
+
+white_lr_fs7_2 <- glm(formula = whitewine_data$qual_above_med ~ whitewine_data$alcohol + whitewine_data$volatile.acidity + whitewine_data$residual.sugar + whitewine_data$pH + whitewine_data$chlorides + whitewine_data$sulphates + whitewine_data$citric.acid,
+              family = binomial(link="logit"))
+
+white_lr_fs7_3 <- glm(formula = whitewine_data$qual_above_med ~ whitewine_data$alcohol + whitewine_data$volatile.acidity + whitewine_data$residual.sugar + whitewine_data$pH + whitewine_data$chlorides + whitewine_data$sulphates + whitewine_data$free.sulfur.dioxide,
+              family = binomial(link="logit"))
+
+white_lr_fs7_4 <- glm(formula = whitewine_data$qual_above_med ~ whitewine_data$alcohol + whitewine_data$volatile.acidity + whitewine_data$residual.sugar + whitewine_data$pH + whitewine_data$chlorides + whitewine_data$sulphates + whitewine_data$total.sulfur.dioxide,
+              family = binomial(link="logit"))
+
+white_lr_fs7_5 <- glm(formula = whitewine_data$qual_above_med ~ whitewine_data$alcohol + whitewine_data$volatile.acidity + whitewine_data$residual.sugar + whitewine_data$pH + whitewine_data$chlorides + whitewine_data$sulphates + whitewine_data$density,
+              family = binomial(link="logit"))
+
+
+summary(white_lr_fs7_1)$coef
+summary(white_lr_fs7_2)$coef
+summary(white_lr_fs7_3)$coef
+summary(white_lr_fs7_4)$coef
+summary(white_lr_fs7_5)$coef
+
+```
+
+lowest pval is density with 1.485483e-06
+
+```{r}
+
+white_lr_fs8_1 <- glm(formula = whitewine_data$qual_above_med ~ whitewine_data$alcohol + whitewine_data$volatile.acidity + whitewine_data$residual.sugar + whitewine_data$pH + whitewine_data$chlorides + whitewine_data$sulphates + whitewine_data$density + whitewine_data$fixed.acidity,
+              family = binomial(link="logit"))
+
+white_lr_fs8_2 <- glm(formula = whitewine_data$qual_above_med ~ whitewine_data$alcohol + whitewine_data$volatile.acidity + whitewine_data$residual.sugar + whitewine_data$pH + whitewine_data$chlorides + whitewine_data$sulphates + whitewine_data$density + whitewine_data$citric.acid,
+              family = binomial(link="logit"))
+
+white_lr_fs8_3 <- glm(formula = whitewine_data$qual_above_med ~ whitewine_data$alcohol + whitewine_data$volatile.acidity + whitewine_data$residual.sugar + whitewine_data$pH + whitewine_data$chlorides + whitewine_data$sulphates + whitewine_data$density + whitewine_data$free.sulfur.dioxide,
+              family = binomial(link="logit"))
+
+white_lr_fs8_4 <- glm(formula = whitewine_data$qual_above_med ~ whitewine_data$alcohol + whitewine_data$volatile.acidity + whitewine_data$residual.sugar + whitewine_data$pH + whitewine_data$chlorides + whitewine_data$sulphates + whitewine_data$density + whitewine_data$total.sulfur.dioxide,
+              family = binomial(link="logit"))
+
+summary(white_lr_fs8_1)$coef
+summary(white_lr_fs8_2)$coef
+summary(white_lr_fs8_3)$coef
+summary(white_lr_fs8_4)$coef
+
+```
+
+lowest pval is fixed.acidity with 2.794502e-09
+(This one is a bit weird)
+
+```{r}
+
+white_lr_fs9_1 <- glm(formula = whitewine_data$qual_above_med ~ whitewine_data$alcohol + whitewine_data$volatile.acidity + whitewine_data$residual.sugar + whitewine_data$pH + whitewine_data$chlorides + whitewine_data$sulphates + whitewine_data$density + whitewine_data$fixed.acidity +  whitewine_data$citric.acid,
+              family = binomial(link="logit"))
+
+white_lr_fs9_2 <- glm(formula = whitewine_data$qual_above_med ~ whitewine_data$alcohol + whitewine_data$volatile.acidity + whitewine_data$residual.sugar + whitewine_data$pH + whitewine_data$chlorides + whitewine_data$sulphates + whitewine_data$density + whitewine_data$fixed.acidity +  whitewine_data$free.sulfur.dioxide,
+              family = binomial(link="logit"))
+
+white_lr_fs9_3 <- glm(formula = whitewine_data$qual_above_med ~ whitewine_data$alcohol + whitewine_data$volatile.acidity + whitewine_data$residual.sugar + whitewine_data$pH + whitewine_data$chlorides + whitewine_data$sulphates + whitewine_data$density + whitewine_data$fixed.acidity +  whitewine_data$total.sulfur.dioxide,
+              family = binomial(link="logit"))
+
+summary(white_lr_fs9_1)$coef
+summary(white_lr_fs9_2)$coef
+summary(white_lr_fs9_3)$coef
+
+```
+
+All p vals above 0.001 and 0.05
+
+Red Wine + White Wine
+
+Backward Elimination
+
+Use a p_val of 0.001
+
+```{r}
+
+redwhite_lr_1 <- glm(formula = wine_data$qual_above_med ~ 
+                wine_data$fixed.acidity + wine_data$volatile.acidity + wine_data$citric.acid
+              + wine_data$residual.sugar + wine_data$chlorides + wine_data$free.sulfur.dioxide
+              + wine_data$total.sulfur.dioxide + wine_data$density + wine_data$pH 
+              + wine_data$sulphates + wine_data$alcohol,
+              family = binomial(link="logit"))
+
+summary(redwhite_lr_1)
+
+```
+
+As we can see citric.acid has the highest p-val of 0.35357
+
+```{r}
+
+redwhite_lr_2 <- glm(formula = wine_data$qual_above_med ~ 
+                wine_data$fixed.acidity + wine_data$volatile.acidity
+              + wine_data$residual.sugar + wine_data$chlorides + wine_data$free.sulfur.dioxide
+              + wine_data$total.sulfur.dioxide + wine_data$density + wine_data$pH 
+              + wine_data$sulphates + wine_data$alcohol,
+              family = binomial(link="logit"))
+
+summary(redwhite_lr_2)
+
+```
+
+If p val stop at 0.01 or 0.05, can stop here
+
+As we can see chlorides  has the highest p-val of 0.00718
+
+```{r}
+
+redwhite_lr_3 <- glm(formula = wine_data$qual_above_med ~ 
+                wine_data$fixed.acidity + wine_data$volatile.acidity
+              + wine_data$residual.sugar + wine_data$free.sulfur.dioxide
+              + wine_data$total.sulfur.dioxide + wine_data$density + wine_data$pH 
+              + wine_data$sulphates + wine_data$alcohol,
+              family = binomial(link="logit"))
+
+summary(redwhite_lr_3)
+
+```
+
+All p val below 0.001
+
+Forward selection
+
+```{r}
+
+redwhite_lr_fs1_1 <- glm(formula = wine_data$qual_above_med ~ wine_data$fixed.acidity,
+              family = binomial(link="logit"))
+
+redwhite_lr_fs1_2 <- glm(formula = wine_data$qual_above_med ~ wine_data$volatile.acidity,
+              family = binomial(link="logit"))
+
+redwhite_lr_fs1_3 <- glm(formula = wine_data$qual_above_med ~ wine_data$citric.acid,
+              family = binomial(link="logit"))
+
+redwhite_lr_fs1_4 <- glm(formula = wine_data$qual_above_med ~ wine_data$residual.sugar,
+              family = binomial(link="logit"))
+
+redwhite_lr_fs1_5 <- glm(formula = wine_data$qual_above_med ~ wine_data$chlorides,
+              family = binomial(link="logit"))
+
+redwhite_lr_fs1_6 <- glm(formula = wine_data$qual_above_med ~ wine_data$free.sulfur.dioxide,
+              family = binomial(link="logit"))
+
+redwhite_lr_fs1_7 <- glm(formula = wine_data$qual_above_med ~ wine_data$total.sulfur.dioxide,
+              family = binomial(link="logit"))
+
+redwhite_lr_fs1_8 <- glm(formula = wine_data$qual_above_med ~ wine_data$density,
+              family = binomial(link="logit"))
+
+redwhite_lr_fs1_9 <- glm(formula = wine_data$qual_above_med ~ wine_data$pH,
+              family = binomial(link="logit"))
+
+redwhite_lr_fs1_10 <- glm(formula = wine_data$qual_above_med ~ wine_data$sulphates,
+              family = binomial(link="logit"))
+
+redwhite_lr_fs1_11 <- glm(formula = wine_data$qual_above_med ~ wine_data$alcohol,
+              family = binomial(link="logit"))
+
+summary(redwhite_lr_fs1_1)$coef
+summary(redwhite_lr_fs1_2)$coef
+summary(redwhite_lr_fs1_3)$coef
+summary(redwhite_lr_fs1_4)$coef
+summary(redwhite_lr_fs1_5)$coef
+summary(redwhite_lr_fs1_6)$coef
+summary(redwhite_lr_fs1_7)$coef
+summary(redwhite_lr_fs1_8)$coef
+summary(redwhite_lr_fs1_9)$coef
+summary(redwhite_lr_fs1_10)$coef
+summary(redwhite_lr_fs1_11)$coef
+
+```
+
+lowest pval is alcohol with 3.096691e-180
+
+```{r}
+
+redwhite_lr_fs2_1 <- glm(formula = wine_data$qual_above_med ~  wine_data$alcohol + wine_data$fixed.acidity,
+              family = binomial(link="logit"))
+
+redwhite_lr_fs2_2 <- glm(formula = wine_data$qual_above_med ~  wine_data$alcohol + wine_data$volatile.acidity,
+              family = binomial(link="logit"))
+
+redwhite_lr_fs2_3 <- glm(formula = wine_data$qual_above_med ~  wine_data$alcohol + wine_data$citric.acid,
+              family = binomial(link="logit"))
+
+redwhite_lr_fs2_4 <- glm(formula = wine_data$qual_above_med ~  wine_data$alcohol + wine_data$residual.sugar,
+              family = binomial(link="logit"))
+
+redwhite_lr_fs2_5 <- glm(formula = wine_data$qual_above_med ~  wine_data$alcohol + wine_data$chlorides,
+              family = binomial(link="logit"))
+
+redwhite_lr_fs2_6 <- glm(formula = wine_data$qual_above_med ~  wine_data$alcohol + wine_data$free.sulfur.dioxide,
+              family = binomial(link="logit"))
+
+redwhite_lr_fs2_7 <- glm(formula = wine_data$qual_above_med ~  wine_data$alcohol + wine_data$total.sulfur.dioxide,
+              family = binomial(link="logit"))
+
+redwhite_lr_fs2_8 <- glm(formula = wine_data$qual_above_med ~  wine_data$alcohol + wine_data$density,
+              family = binomial(link="logit"))
+
+redwhite_lr_fs2_9 <- glm(formula = wine_data$qual_above_med ~  wine_data$alcohol +  wine_data$pH,
+              family = binomial(link="logit"))
+
+redwhite_lr_fs2_10 <- glm(formula = wine_data$qual_above_med ~  wine_data$alcohol + wine_data$sulphates,
+              family = binomial(link="logit"))
+
+
+summary(redwhite_lr_fs2_1)$coef
+summary(redwhite_lr_fs2_2)$coef
+summary(redwhite_lr_fs2_3)$coef
+summary(redwhite_lr_fs2_4)$coef
+summary(redwhite_lr_fs2_5)$coef
+summary(redwhite_lr_fs2_6)$coef
+summary(redwhite_lr_fs2_7)$coef
+summary(redwhite_lr_fs2_8)$coef
+summary(redwhite_lr_fs2_9)$coef
+summary(redwhite_lr_fs2_10)$coef
+
+```
+
+lowest pval is volatile.acidity with 1.114400e-35
+
+```{r}
+
+redwhite_lr_fs3_1 <- glm(formula = wine_data$qual_above_med ~  wine_data$alcohol + wine_data$volatile.acidity +  wine_data$fixed.acidity,
+              family = binomial(link="logit"))
+
+redwhite_lr_fs3_2 <- glm(formula = wine_data$qual_above_med ~  wine_data$alcohol + wine_data$volatile.acidity +  wine_data$citric.acid,
+              family = binomial(link="logit"))
+
+redwhite_lr_fs3_3 <- glm(formula = wine_data$qual_above_med ~  wine_data$alcohol + wine_data$volatile.acidity +  wine_data$residual.sugar,
+              family = binomial(link="logit"))
+
+redwhite_lr_fs3_4 <- glm(formula = wine_data$qual_above_med ~  wine_data$alcohol + wine_data$volatile.acidity +  wine_data$chlorides,
+              family = binomial(link="logit"))
+
+redwhite_lr_fs3_5 <- glm(formula = wine_data$qual_above_med ~  wine_data$alcohol + wine_data$volatile.acidity +  wine_data$free.sulfur.dioxide,
+              family = binomial(link="logit"))
+
+redwhite_lr_fs3_6 <- glm(formula = wine_data$qual_above_med ~  wine_data$alcohol + wine_data$volatile.acidity +  wine_data$total.sulfur.dioxide,
+              family = binomial(link="logit"))
+
+redwhite_lr_fs3_7 <- glm(formula = wine_data$qual_above_med ~  wine_data$alcohol + wine_data$volatile.acidity +  wine_data$density,
+              family = binomial(link="logit"))
+
+redwhite_lr_fs3_8 <- glm(formula = wine_data$qual_above_med ~  wine_data$alcohol + wine_data$volatile.acidity +   wine_data$pH,
+              family = binomial(link="logit"))
+
+redwhite_lr_fs3_9 <- glm(formula = wine_data$qual_above_med ~  wine_data$alcohol + wine_data$volatile.acidity +  wine_data$sulphates,
+              family = binomial(link="logit"))
+
+
+summary(redwhite_lr_fs3_1)$coef
+summary(redwhite_lr_fs3_2)$coef
+summary(redwhite_lr_fs3_3)$coef
+summary(redwhite_lr_fs3_4)$coef
+summary(redwhite_lr_fs3_5)$coef
+summary(redwhite_lr_fs3_6)$coef
+summary(redwhite_lr_fs3_7)$coef
+summary(redwhite_lr_fs3_8)$coef
+summary(redwhite_lr_fs3_9)$coef
+
+```
+
+lowest pval is sulphates with 1.381116e-12
+
+```{r}
+
+redwhite_lr_fs4_1 <- glm(formula = wine_data$qual_above_med ~  wine_data$alcohol + wine_data$volatile.acidity + wine_data$sulphates +   wine_data$fixed.acidity,
+              family = binomial(link="logit"))
+
+redwhite_lr_fs4_2 <- glm(formula = wine_data$qual_above_med ~  wine_data$alcohol + wine_data$volatile.acidity + wine_data$sulphates +   wine_data$citric.acid,
+              family = binomial(link="logit"))
+
+redwhite_lr_fs4_3 <- glm(formula = wine_data$qual_above_med ~  wine_data$alcohol + wine_data$volatile.acidity + wine_data$sulphates +   wine_data$residual.sugar,
+              family = binomial(link="logit"))
+
+redwhite_lr_fs4_4 <- glm(formula = wine_data$qual_above_med ~  wine_data$alcohol + wine_data$volatile.acidity + wine_data$sulphates +   wine_data$chlorides,
+              family = binomial(link="logit"))
+
+redwhite_lr_fs4_5 <- glm(formula = wine_data$qual_above_med ~  wine_data$alcohol + wine_data$volatile.acidity + wine_data$sulphates +   wine_data$free.sulfur.dioxide,
+              family = binomial(link="logit"))
+
+redwhite_lr_fs4_6 <- glm(formula = wine_data$qual_above_med ~  wine_data$alcohol + wine_data$volatile.acidity + wine_data$sulphates +   wine_data$total.sulfur.dioxide,
+              family = binomial(link="logit"))
+
+redwhite_lr_fs4_7 <- glm(formula = wine_data$qual_above_med ~  wine_data$alcohol + wine_data$volatile.acidity + wine_data$sulphates +   wine_data$density,
+              family = binomial(link="logit"))
+
+redwhite_lr_fs4_8 <- glm(formula = wine_data$qual_above_med ~  wine_data$alcohol + wine_data$volatile.acidity + wine_data$sulphates +  wine_data$pH,
+              family = binomial(link="logit"))
+
+
+summary(redwhite_lr_fs4_1)$coef
+summary(redwhite_lr_fs4_2)$coef
+summary(redwhite_lr_fs4_3)$coef
+summary(redwhite_lr_fs4_4)$coef
+summary(redwhite_lr_fs4_5)$coef
+summary(redwhite_lr_fs4_6)$coef
+summary(redwhite_lr_fs4_7)$coef
+summary(redwhite_lr_fs4_8)$coef
+
+```
+
+lowest pval is residual.sugar  with 9.474215e-10
+
+```{r}
+
+redwhite_lr_fs5_1 <- glm(formula = wine_data$qual_above_med ~  wine_data$alcohol + wine_data$volatile.acidity + wine_data$sulphates + wine_data$residual.sugar +   wine_data$fixed.acidity,
+              family = binomial(link="logit"))
+
+redwhite_lr_fs5_2 <- glm(formula = wine_data$qual_above_med ~  wine_data$alcohol + wine_data$volatile.acidity + wine_data$sulphates + wine_data$residual.sugar +   wine_data$citric.acid,
+              family = binomial(link="logit"))
+
+redwhite_lr_fs5_3 <- glm(formula = wine_data$qual_above_med ~  wine_data$alcohol + wine_data$volatile.acidity + wine_data$sulphates + wine_data$residual.sugar +   wine_data$chlorides,
+              family = binomial(link="logit"))
+
+redwhite_lr_fs5_4 <- glm(formula = wine_data$qual_above_med ~  wine_data$alcohol + wine_data$volatile.acidity + wine_data$sulphates + wine_data$residual.sugar +   wine_data$free.sulfur.dioxide,
+              family = binomial(link="logit"))
+
+redwhite_lr_fs5_5 <- glm(formula = wine_data$qual_above_med ~  wine_data$alcohol + wine_data$volatile.acidity + wine_data$sulphates +  wine_data$residual.sugar +  wine_data$total.sulfur.dioxide,
+              family = binomial(link="logit"))
+
+redwhite_lr_fs5_6 <- glm(formula = wine_data$qual_above_med ~  wine_data$alcohol + wine_data$volatile.acidity + wine_data$sulphates + wine_data$residual.sugar +   wine_data$density,
+              family = binomial(link="logit"))
+
+redwhite_lr_fs5_7 <- glm(formula = wine_data$qual_above_med ~  wine_data$alcohol + wine_data$volatile.acidity + wine_data$sulphates + wine_data$residual.sugar +  wine_data$pH,
+              family = binomial(link="logit"))
+
+
+summary(redwhite_lr_fs5_1)$coef
+summary(redwhite_lr_fs5_2)$coef
+summary(redwhite_lr_fs5_3)$coef
+summary(redwhite_lr_fs5_4)$coef
+summary(redwhite_lr_fs5_5)$coef
+summary(redwhite_lr_fs5_6)$coef
+summary(redwhite_lr_fs5_7)$coef
+
+```
+
+lowest pval is chlorides with 3.297264e-04
+
+```{r}
+
+redwhite_lr_fs6_1 <- glm(formula = wine_data$qual_above_med ~  wine_data$alcohol + wine_data$volatile.acidity + wine_data$sulphates + wine_data$residual.sugar + wine_data$chlorides +   wine_data$fixed.acidity,
+              family = binomial(link="logit"))
+
+redwhite_lr_fs6_2 <- glm(formula = wine_data$qual_above_med ~  wine_data$alcohol + wine_data$volatile.acidity + wine_data$sulphates + wine_data$residual.sugar + wine_data$chlorides +   wine_data$citric.acid,
+              family = binomial(link="logit"))
+
+redwhite_lr_fs6_3 <- glm(formula = wine_data$qual_above_med ~  wine_data$alcohol + wine_data$volatile.acidity + wine_data$sulphates + wine_data$residual.sugar + wine_data$chlorides +   wine_data$free.sulfur.dioxide,
+              family = binomial(link="logit"))
+
+redwhite_lr_fs6_4 <- glm(formula = wine_data$qual_above_med ~  wine_data$alcohol + wine_data$volatile.acidity + wine_data$sulphates +  wine_data$residual.sugar + wine_data$chlorides +  wine_data$total.sulfur.dioxide,
+              family = binomial(link="logit"))
+
+redwhite_lr_fs6_5 <- glm(formula = wine_data$qual_above_med ~  wine_data$alcohol + wine_data$volatile.acidity + wine_data$sulphates + wine_data$residual.sugar + wine_data$chlorides +   wine_data$density,
+              family = binomial(link="logit"))
+
+redwhite_lr_fs6_6 <- glm(formula = wine_data$qual_above_med ~  wine_data$alcohol + wine_data$volatile.acidity + wine_data$sulphates + wine_data$residual.sugar + wine_data$chlorides +  wine_data$pH,
+              family = binomial(link="logit"))
+
+
+summary(redwhite_lr_fs6_1)$coef
+summary(redwhite_lr_fs6_2)$coef
+summary(redwhite_lr_fs6_3)$coef
+summary(redwhite_lr_fs6_4)$coef
+summary(redwhite_lr_fs6_5)$coef
+summary(redwhite_lr_fs6_6)$coef
+
+```
+
+If we stop at pval 0.001, we stop here since all above 0.001
+
+lowest pval is total.sulfur.dioxide with 2.262030e-03
+
+```{r}
+
+redwhite_lr_fs7_1 <- glm(formula = wine_data$qual_above_med ~  wine_data$alcohol + wine_data$volatile.acidity + wine_data$sulphates + wine_data$residual.sugar + wine_data$chlorides + wine_data$total.sulfur.dioxide +   wine_data$fixed.acidity,
+              family = binomial(link="logit"))
+
+redwhite_lr_fs7_2 <- glm(formula = wine_data$qual_above_med ~  wine_data$alcohol + wine_data$volatile.acidity + wine_data$sulphates + wine_data$residual.sugar + wine_data$chlorides + wine_data$total.sulfur.dioxide +   wine_data$citric.acid,
+              family = binomial(link="logit"))
+
+redwhite_lr_fs7_3 <- glm(formula = wine_data$qual_above_med ~  wine_data$alcohol + wine_data$volatile.acidity + wine_data$sulphates + wine_data$residual.sugar + wine_data$chlorides + wine_data$total.sulfur.dioxide +   wine_data$free.sulfur.dioxide,
+              family = binomial(link="logit"))
+
+redwhite_lr_fs7_4 <- glm(formula = wine_data$qual_above_med ~  wine_data$alcohol + wine_data$volatile.acidity + wine_data$sulphates + wine_data$residual.sugar + wine_data$chlorides + wine_data$total.sulfur.dioxide +   wine_data$density,
+              family = binomial(link="logit"))
+
+redwhite_lr_fs7_5 <- glm(formula = wine_data$qual_above_med ~  wine_data$alcohol + wine_data$volatile.acidity + wine_data$sulphates + wine_data$residual.sugar + wine_data$chlorides + wine_data$total.sulfur.dioxide +  wine_data$pH,
+              family = binomial(link="logit"))
+
+
+summary(redwhite_lr_fs7_1)$coef
+summary(redwhite_lr_fs7_2)$coef
+summary(redwhite_lr_fs7_3)$coef
+summary(redwhite_lr_fs7_4)$coef
+summary(redwhite_lr_fs7_5)$coef
+
+```
+
+lowest pval is free.sulfur.dioxide with 6.371873e-06
+
+```{r}
+
+redwhite_lr_fs8_1 <- glm(formula = wine_data$qual_above_med ~  wine_data$alcohol + wine_data$volatile.acidity + wine_data$sulphates + wine_data$residual.sugar + wine_data$chlorides + wine_data$total.sulfur.dioxide +  wine_data$free.sulfur.dioxide +   wine_data$fixed.acidity,
+              family = binomial(link="logit"))
+
+redwhite_lr_fs8_2 <- glm(formula = wine_data$qual_above_med ~  wine_data$alcohol + wine_data$volatile.acidity + wine_data$sulphates + wine_data$residual.sugar + wine_data$chlorides + wine_data$total.sulfur.dioxide +  wine_data$free.sulfur.dioxide +   wine_data$citric.acid,
+              family = binomial(link="logit"))
+
+redwhite_lr_fs8_3 <- glm(formula = wine_data$qual_above_med ~  wine_data$alcohol + wine_data$volatile.acidity + wine_data$sulphates + wine_data$residual.sugar + wine_data$chlorides + wine_data$total.sulfur.dioxide +  wine_data$free.sulfur.dioxide +   wine_data$density,
+              family = binomial(link="logit"))
+
+redwhite_lr_fs8_4 <- glm(formula = wine_data$qual_above_med ~  wine_data$alcohol + wine_data$volatile.acidity + wine_data$sulphates + wine_data$residual.sugar + wine_data$chlorides + wine_data$total.sulfur.dioxide +  wine_data$free.sulfur.dioxide +  wine_data$pH,
+              family = binomial(link="logit"))
+
+
+summary(redwhite_lr_fs8_1)$coef
+summary(redwhite_lr_fs8_2)$coef
+summary(redwhite_lr_fs8_3)$coef
+summary(redwhite_lr_fs8_4)$coef
+
+```
+
+lowest pval is pH with 9.133757e-03
+
+```{r}
+
+redwhite_lr_fs9_1 <- glm(formula = wine_data$qual_above_med ~  wine_data$alcohol + wine_data$volatile.acidity + wine_data$sulphates + wine_data$residual.sugar + wine_data$chlorides + wine_data$total.sulfur.dioxide +  wine_data$free.sulfur.dioxide +  wine_data$pH +   wine_data$fixed.acidity,
+              family = binomial(link="logit"))
+
+redwhite_lr_fs9_2 <- glm(formula = wine_data$qual_above_med ~  wine_data$alcohol + wine_data$volatile.acidity + wine_data$sulphates + wine_data$residual.sugar + wine_data$chlorides + wine_data$total.sulfur.dioxide +  wine_data$free.sulfur.dioxide +  wine_data$pH +   wine_data$citric.acid,
+              family = binomial(link="logit"))
+
+redwhite_lr_fs9_3 <- glm(formula = wine_data$qual_above_med ~  wine_data$alcohol + wine_data$volatile.acidity + wine_data$sulphates + wine_data$residual.sugar + wine_data$chlorides + wine_data$total.sulfur.dioxide +  wine_data$free.sulfur.dioxide +  wine_data$pH +   wine_data$density,
+              family = binomial(link="logit"))
+
+
+summary(redwhite_lr_fs9_1)$coef
+summary(redwhite_lr_fs9_2)$coef
+summary(redwhite_lr_fs9_3)$coef
+
+```
+
+lowest pval is fixed.acidity with 1.679804e-04
+
+```{r}
+
+redwhite_lr_fs10_1 <- glm(formula = wine_data$qual_above_med ~  wine_data$alcohol + wine_data$volatile.acidity + wine_data$sulphates + wine_data$residual.sugar + wine_data$chlorides + wine_data$total.sulfur.dioxide +  wine_data$free.sulfur.dioxide +  wine_data$pH + wine_data$fixed.acidity +   wine_data$citric.acid,
+              family = binomial(link="logit"))
+
+redwhite_lr_fs10_2 <- glm(formula = wine_data$qual_above_med ~  wine_data$alcohol + wine_data$volatile.acidity + wine_data$sulphates + wine_data$residual.sugar + wine_data$chlorides + wine_data$total.sulfur.dioxide +  wine_data$free.sulfur.dioxide +  wine_data$pH + wine_data$fixed.acidity +   wine_data$density,
+              family = binomial(link="logit"))
+
+
+summary(redwhite_lr_fs10_1)$coef
+summary(redwhite_lr_fs10_2)$coef
+
+```
+
+lowest pval is density with 1.098781e-08
+
+```{r}
+
+redwhite_lr_fs11_1 <- glm(formula = wine_data$qual_above_med ~  wine_data$alcohol + wine_data$volatile.acidity + wine_data$sulphates + wine_data$residual.sugar + wine_data$chlorides + wine_data$total.sulfur.dioxide +  wine_data$free.sulfur.dioxide +  wine_data$pH + wine_data$fixed.acidity + wine_data$density +  wine_data$citric.acid,
+              family = binomial(link="logit"))
+
+
+summary(redwhite_lr_fs11_1)$coef
+
+```
+
+pval is higher than 0.05, so we stop here.
+
+
+
+
+
+

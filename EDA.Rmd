@@ -1,0 +1,96 @@
+---
+title: Exploratory Data Analysis
+---
+
+## Step 0: Load the Data
+
+Loading the data for red and white wines separately: 
+
+```{r}
+red <- read.csv("./winequality-red.csv")
+white <- read.csv("./winequality-white.csv")
+```
+
+Labeling the data
+
+```{r}
+red$label <- rep("red", nrow(red))
+white$label <- rep("white", nrow(white))
+total <- rbind(red, white)
+```
+
+## Step 1: Distribution of the Quality of the Wines
+
+How are the qualities for the wines distributed? 
+
+```{r}
+library(ggplot2)
+
+quality_plot <- ggplot(total, aes(quality, label))
+quality_plot + geom_boxplot(fill = c('pink', 'yellow')) + ggtitle("Wine Quality in the Dataset")+
+xlab('Quality') + ylab('Wine Type')
+```
+
+
+
+## Step 2: Clustering the Wines 
+
+
+The histograms of quality are not very different across the two wines. 
+Why look at the two kinds of wine separately unless they are different?
+
+Perform k-means here:
+```{r}
+library(plyr)
+library(ggplot2)
+library(cluster)
+library(lattice)
+library(graphics)
+library(grid)
+library(gridExtra)
+
+
+kmdata <- as.matrix(total[c("fixed.acidity", "volatile.acidity", "citric.acid", 
+"residual.sugar", "chlorides", "free.sulfur.dioxide", "total.sulfur.dioxide", "density",
+"pH", "sulphates", "alcohol")])
+
+
+#wss <- numeric(15)
+#for (k in 1:15) wss[k] <- sum(kmeans(kmdata, centers = k, nstart = 25)$withinss)
+#plot(1:15, wss, type = 'b', xlab = "Number of Clusters", ylab = "WSS")
+
+
+km <- kmeans(kmdata, 2, nstart = 25)
+```
+
+Prepare for plotting here: 
+
+```{r}
+df = as.data.frame(kmdata)
+df$cluster = factor(km$cluster)
+centers = as.data.frame(km$centers)
+
+g1 <- ggplot(data = df, aes(x = fixed.acidity, y = volatile.acidity, color = cluster)) + 
+geom_point() + theme(legend.position = "right") + 
+geom_point(data = centers, aes(x = fixed.acidity, y = volatile.acidity, color = as.factor(c(1,2))), size = 10, alpha = 0.3, show.legend = FALSE)
+
+g2 <- ggplot(data = df, aes(x = citric.acid, y = residual.sugar, color = cluster)) + 
+geom_point() + theme(legend.position = "right") + 
+geom_point(data = centers, aes(x = citric.acid, y = residual.sugar, color = as.factor(c(1,2))), size = 10, alpha = 0.3, show.legend = FALSE)
+
+g3 <- ggplot(data = df, aes(x = chlorides, y = free.sulfur.dioxide, color = cluster)) + 
+geom_point() + theme(legend.position = "right") + 
+geom_point(data = centers, aes(x = chlorides, y = free.sulfur.dioxide, color = as.factor(c(1,2))), size = 10, alpha = 0.3, show.legend = FALSE)
+
+g4 <- ggplot(data = df, aes(x = total.sulfur.dioxide, y = density, color = cluster)) + 
+geom_point() + theme(legend.position = "right") + 
+geom_point(data = centers, aes(x = total.sulfur.dioxide, y = density, color = as.factor(c(1,2))), size = 10, alpha = 0.3, show.legend = FALSE)
+
+g5 <- ggplot(data = df, aes(x = pH, y = sulphates, color = cluster)) + 
+geom_point() + theme(legend.position = "right") + 
+geom_point(data = centers, aes(x = pH, y = sulphates, color = as.factor(c(1,2))), size = 10, alpha = 0.3, show.legend = FALSE)
+
+grid.arrange(g1, g2, g3, g4, g5, nrow = 5)
+```
+
+

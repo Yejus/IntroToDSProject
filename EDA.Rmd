@@ -93,4 +93,32 @@ geom_point(data = centers, aes(x = pH, y = sulphates, color = as.factor(c(1,2)))
 grid.arrange(g1, g2, g3, g4, g5, nrow = 5)
 ```
 
+Due to the high-dimensionality of the data, the clusters aren't obvious in the plots except one. 
 
+## Principal Components Analysis
+
+```{r}
+pca_red <- prcomp(red[,c("fixed.acidity", "volatile.acidity", "citric.acid", 
+"residual.sugar", "chlorides", "free.sulfur.dioxide", "total.sulfur.dioxide", "density",
+"pH", "sulphates", "alcohol")])
+
+pca_white <- prcomp(white[,c("fixed.acidity", "volatile.acidity", "citric.acid", 
+"residual.sugar", "chlorides", "free.sulfur.dioxide", "total.sulfur.dioxide", "density",
+"pH", "sulphates", "alcohol")])
+
+```
+
+The first two PCAs in both the red wine and the white wine datasets explain more than 98% of the 
+variance in the data. 
+
+```{r}
+summary(pca_red)
+summary(pca_white)
+```
+
+Plotting the PCAs: 
+
+```{r}
+library(devtools)
+install_github("vqv/ggbiplot")
+```

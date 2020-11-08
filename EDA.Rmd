@@ -1,5 +1,6 @@
 ---
 title: Exploratory Data Analysis
+
 ---
 
 ## Step 0: Load the Data
@@ -7,6 +8,7 @@ title: Exploratory Data Analysis
 Loading the data for red and white wines separately: 
 
 ```{r}
+knitr::opts_chunk$set(error = TRUE)
 red <- read.csv("./winequality-red.csv")
 white <- read.csv("./winequality-white.csv")
 ```
@@ -17,6 +19,7 @@ Labeling the data
 red$label <- rep("red", nrow(red))
 white$label <- rep("white", nrow(white))
 total <- rbind(red, white)
+total <- na.omit(total)
 ```
 
 ## Step 0: Distribution of the Quality of the Wines
@@ -126,25 +129,69 @@ Due to the high-dimensionality of the data, the clusters aren't obvious in the p
 ```{r}
 pca_red <- prcomp(red[,c("fixed.acidity", "volatile.acidity", "citric.acid", 
 "residual.sugar", "chlorides", "free.sulfur.dioxide", "total.sulfur.dioxide", "density",
-"pH", "sulphates", "alcohol")])
+"pH", "sulphates", "alcohol")], scale. = TRUE, center = TRUE)
 
 pca_white <- prcomp(white[,c("fixed.acidity", "volatile.acidity", "citric.acid", 
 "residual.sugar", "chlorides", "free.sulfur.dioxide", "total.sulfur.dioxide", "density",
-"pH", "sulphates", "alcohol")])
+"pH", "sulphates", "alcohol")], scale. = TRUE, center = TRUE)
 
 ```
 
-The first two PCAs in both the red wine and the white wine datasets explain more than 98% of the 
-variance in the data. 
+The first two PCAs in both the red wine and the white wine datasets don't explain much of the variance:
 
 ```{r}
 summary(pca_red)
 summary(pca_white)
+nrow(total)
 ```
 
 Plotting the PCAs: 
 
+For red wine: 
 ```{r}
-library(devtools)
-install_github("vqv/ggbiplot")
+source('https://raw.githubusercontent.com/vqv/ggbiplot/master/R/ggbiplot.r')
+
+source('https://raw.githubusercontent.com/vqv/ggbiplot/master/R/ggscreeplot.r')
+
+ggbiplot(pca_red, obs.scale = 1, var.scale = 1) +
+scale_color_discrete(name = '')+
+theme(legend.direction = 'horizontal', legend.position = 'top')
+
+```
+And for white wine: 
+
+```{r}
+
+ggbiplot(pca_white, obs.scale = 1, var.scale = 1) +
+scale_color_discrete(name = '') +
+theme(legend.direction = 'horizontal', legend.position = 'top')
+```
+
+Let's see if there is any difference for both wines plotted together. 
+
+PC1 vs. PC2 distinguishes between the two wines: 
+
+```{r}
+pca_total <- prcomp(total, scale. = TRUE, center = TRUE)
+
+ggbiplot(pca_total, obs.scale = 1, var.scale = 1, groups = total$label, ellipse = TRUE) +
+scale_color_discrete(name = '') +
+theme(legend.direction = 'horizontal', legend.position = 'top')
+```
+
+PC1 vs. PC3: 
+
+```{r}
+ggbiplot(pca_total, obs.scale = 1, var.scale = 1, choices = c(1,3), groups = total$label, ellipse = TRUE) +
+scale_color_discrete(name = '') +
+theme(legend.direction = 'horizontal', legend.position = 'top')
+
+```
+
+PC1 vs. PC4:
+
+```{r}
+ggbiplot(pca_total, obs.scale = 1, var.scale = 1, choices = c(1,4), groups = total$label, ellipse = TRUE) +
+scale_color_discrete(name = '') +
+theme(legend.direction = 'horizontal', legend.position = 'top')
 ```

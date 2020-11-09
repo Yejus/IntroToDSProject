@@ -3,7 +3,7 @@ title: Exploratory Data Analysis
 
 ---
 
-## Step 0: Load the Data
+## Step 0: Load the Data and Check a few things. 
 
 Loading the data for red and white wines separately: 
 
@@ -22,9 +22,8 @@ total <- rbind(red, white)
 total <- na.omit(total)
 ```
 
-## Step 0: Distribution of the Quality of the Wines
 
-How are the qualities for the wines distributed? 
+How are the qualities for the wines (our response variable) distributed? 
 
 ```{r}
 library(ggplot2)
@@ -34,39 +33,10 @@ quality_plot + geom_boxplot(fill = c('pink', 'yellow')) + ggtitle("Wine Quality 
 xlab('Quality') + ylab('Wine Type')
 ```
 
+## Step 1: Clustering the Wines 
 
-## Step 1: Correlation Matrix of the predictors
+Why treat the two kinds of wine differently? Are red and white wines that different?
 
-```{r}
-library('viridis')
-corr_red <- cor(red[,c(1:11)])
-corr_white <- cor(white[, c(1:11)])
-
-col = colorRampPalette(c("blue", "white", "red")) (20)
-colors = viridis(n = 256, option = 'inferno') (20)
-```
-
-Correlation graphs/Heat-maps of the predictors for the Red wine dataset: 
-
-```{r}
-library('PerformanceAnalytics')
-red_map <- heatmap(x = corr_red, col = colors, symm = TRUE)
-chart.Correlation(corr_red, histogram = TRUE, pch = 1)
-```
-
-And for White wines:
-```{r}
-white_map <- heatmap(x = corr_white, col = colors, symm = TRUE)
-chart.Correlation(corr_red, histogram = TRUE, pch = 1)
-```
-
-
-
-## Step 2: Clustering the Wines 
-
-
-The histograms of quality are not very different across the two wines. 
-Why look at the two kinds of wine separately unless they are different?
 
 Perform k-means here:
 ```{r}
@@ -122,9 +92,10 @@ geom_point(data = centers, aes(x = pH, y = sulphates, color = as.factor(c(1,2)))
 grid.arrange(g1, g2, g3, g4, g5, nrow = 5)
 ```
 
-Due to the high-dimensionality of the data, the clusters aren't obvious in the plots except one. 
+Due to the high-dimensionality of the data, the clusters aren't obvious in the plots except one. Perhaps a Principal Components Analysis can 
+reveal more differences between the two wines...
 
-## Principal Components Analysis
+## Step 2: Principal Components Analysis
 
 ```{r}
 pca_red <- prcomp(red[,c("fixed.acidity", "volatile.acidity", "citric.acid", 
@@ -172,7 +143,7 @@ Let's see if there is any difference for both wines plotted together.
 PC1 vs. PC2 distinguishes between the two wines: 
 
 ```{r}
-pca_total <- prcomp(total, scale. = TRUE, center = TRUE)
+pca_total <- prcomp(total[,c(1:11)], scale. = TRUE, center = TRUE)
 
 ggbiplot(pca_total, obs.scale = 1, var.scale = 1, groups = total$label, ellipse = TRUE) +
 scale_color_discrete(name = '') +
@@ -194,4 +165,68 @@ PC1 vs. PC4:
 ggbiplot(pca_total, obs.scale = 1, var.scale = 1, choices = c(1,4), groups = total$label, ellipse = TRUE) +
 scale_color_discrete(name = '') +
 theme(legend.direction = 'horizontal', legend.position = 'top')
+```
+
+Hmm, the PCA seems to separate the two wines apart. The first few principal components do not explain much of the variance in the data (the first two barely explain more than 50%).
+This might suggest the predictors are largely uncorrelated with each other. Nevertheless, we can check for correlation and take appropriate measures to make sure our 
+final predictors are as uncorrelated as possible. 
+
+## Step 3: Correlation Matrix of the predictors
+
+```{r}
+corr_red <- cor(red[,c(1:11)])
+corr_white <- cor(white[, c(1:11)])
+```
+
+Correlation graphs/Heat-maps of the predictors for the Red wine dataset: 
+
+```{r}
+library('gplots')
+library('PerformanceAnalytics')
+red_map <- heatmap.2(x = corr_red, col = rev(heat.colors(16)), symm = TRUE, dendrogram = 'none', 
+trace = 'none', main = "Correlation Matrix for Red Wines", key = TRUE,
+ lmat=rbind( c(0, 3), c(2,1), c(0,4) ), lhei=c(1.5,4,1.5), lwid = c(0.5,3), srtRow = 10, srtCol = 20, symkey = TRUE, key.title = NA,
+ tracecol = 'blue')
+chart.Correlation(corr_red, histogram = TRUE, pch = 1)
+```
+
+And for White wines:
+```{r}
+white_map <- heatmap.2(x = corr_white, col = rev(heat.colors(16)), symm = TRUE, dendrogram = 'none', 
+trace = 'none', main = "Correlation Matrix for Red Wines", key = TRUE,
+ lmat=rbind( c(0, 3), c(2,1), c(0,4) ), lhei=c(1.5,4,1.5), lwid = c(0.5,3), srtRow = 10, srtCol = 20, symkey = TRUE, key.title = NA,
+ tracecol = 'blue')
+chart.Correlation(corr_white, histogram = TRUE, pch = 1)
+```
+
+Some predictors are highly correlated in both datasets (>50%). Moreover, some of them are not the same pairs 
+across both datasets. 
+
+## New Scatterplots with the correlated variables removed. 
+
+```{r}
+corr_red_new <-cor(red[,c("citric.acid", 
+"residual.sugar", "chlorides", "free.sulfur.dioxide", "sulphates", "alcohol")])
+
+corr_white_new <- cor(white[, c("fixed.acidity", "volatile.acidity", "citric.acid", 
+"residual.sugar", "chlorides", "free.sulfur.dioxide", "sulphates")])
+```
+
+For red wine (new)
+```{r}
+red_map_new <- heatmap.2(x = corr_red_new, col = rev(heat.colors(16)), symm = TRUE, dendrogram = 'none', 
+trace = 'none', main = "Correlation Matrix for Red Wines (New)", key = TRUE,
+ lmat=rbind( c(0, 3), c(2,1), c(0,4) ), lhei=c(1.5,4,1.5), lwid = c(0.5,3), srtRow = 10, srtCol = 20, symkey = TRUE, key.title = NA,
+ tracecol = 'blue')
+chart.Correlation(corr_red_new, histogram = TRUE, pch = 1)
+```
+
+For white wine (new)
+
+```{r}
+white_map_new <- heatmap.2(x = corr_white_new, col = rev(heat.colors(16)), symm = TRUE, dendrogram = 'none', 
+trace = 'none', main = "Correlation Matrix for White Wines (New)", key = TRUE,
+ lmat=rbind( c(0, 3), c(2,1), c(0,4) ), lhei=c(1.5,4,1.5), lwid = c(0.5,3), srtRow = 10, srtCol = 20, symkey = TRUE, key.title = NA,
+ tracecol = 'blue')
+chart.Correlation(corr_white_new, histogram = TRUE, pch = 1)
 ```

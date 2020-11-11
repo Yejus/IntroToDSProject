@@ -98,7 +98,7 @@ redwine_pca$x
 
 ```{r}
 
-redwine_mat <- as.matrix(redwine_data[,c(1:11)])
+redwine_mat <- as.matrix(redwine_data[,c(3:6,9,10)])
 
 cv_result <- cv.glmnet(x = redwine_mat, y = redwine_data$qual_above_med,family= "binomial")
 
@@ -112,7 +112,7 @@ rownames(tmp)[tmp[,1] != 0]
 
 ```{r}
 
-whitewine_mat <- as.matrix(whitewine_data[,c(1:11)])
+whitewine_mat <- as.matrix(whitewine_data[,c(1:6,9)])
 
 cv_result <- cv.glmnet(x = whitewine_mat, y = whitewine_data$qual_above_med,family= "binomial")
 
@@ -139,6 +139,423 @@ rownames(tmp)[tmp[,1] != 0]
 ```
 
 Both
+
+Test new log reg with removed correlated var
+
+Red Wine
+
+corr_red_new <-cor(red[,c("citric.acid", 
+"residual.sugar", "chlorides", "free.sulfur.dioxide", "sulphates", "alcohol")])
+
+Back Elim
+
+Use a p_val of 0.001
+
+```{r}
+
+red_new_lr <- glm(formula = redwine_data$qual_above_med ~ 
+               redwine_data$citric.acid
+              + redwine_data$residual.sugar + redwine_data$chlorides + redwine_data$free.sulfur.dioxide
+              + redwine_data$sulphates + redwine_data$alcohol,
+              family = binomial(link="logit"))
+
+summary(red_new_lr)
+
+```
+
+As we can see residual.sugar has the highest p-val of 0.630051.
+
+```{r}
+
+red_new_lr_2 <- glm(formula = redwine_data$qual_above_med ~ 
+               redwine_data$citric.acid + redwine_data$chlorides + redwine_data$free.sulfur.dioxide
+              + redwine_data$sulphates + redwine_data$alcohol,
+              family = binomial(link="logit"))
+
+summary(red_new_lr_2)
+
+```
+
+If 0.05 stop here.
+
+Significant var:
+redwine_data$citric.acid + redwine_data$chlorides + redwine_data$free.sulfur.dioxide
+              + redwine_data$sulphates + redwine_data$alcohol
+
+redwine_data$free.sulfur.dioxide, with p val 0.026230
+
+```{r}
+
+red_new_lr_3 <- glm(formula = redwine_data$qual_above_med ~ 
+               redwine_data$citric.acid + redwine_data$chlorides
+              + redwine_data$sulphates + redwine_data$alcohol,
+              family = binomial(link="logit"))
+
+summary(red_new_lr_3)
+
+```
+
+Done.
+
+Significant var:
+ redwine_data$citric.acid + redwine_data$chlorides
+              + redwine_data$sulphates + redwine_data$alcohol
+
+FS
+
+corr_red_new <-cor(red[,c("citric.acid", 
+"residual.sugar", "chlorides", "free.sulfur.dioxide", "sulphates", "alcohol")])
+
+```{r}
+
+red_lr_new_fs1_1 <- glm(formula = redwine_data$qual_above_med ~ redwine_data$citric.acid,
+              family = binomial(link="logit"))
+
+red_lr_new_fs1_2 <- glm(formula = redwine_data$qual_above_med ~ redwine_data$residual.sugar,
+              family = binomial(link="logit"))
+
+red_lr_new_fs1_3 <- glm(formula = redwine_data$qual_above_med ~ redwine_data$chlorides,
+              family = binomial(link="logit"))
+
+red_lr_new_fs1_4 <- glm(formula = redwine_data$qual_above_med ~ redwine_data$free.sulfur.dioxide,
+              family = binomial(link="logit"))
+
+red_lr_new_fs1_5 <- glm(formula = redwine_data$qual_above_med ~ redwine_data$sulphates,
+              family = binomial(link="logit"))
+
+red_lr_new_fs1_6 <- glm(formula = redwine_data$qual_above_med ~ redwine_data$alcohol,
+              family = binomial(link="logit"))
+
+summary(red_lr_new_fs1_1)$coef
+summary(red_lr_new_fs1_2)$coef
+summary(red_lr_new_fs1_3)$coef
+summary(red_lr_new_fs1_4)$coef
+summary(red_lr_new_fs1_5)$coef
+summary(red_lr_new_fs1_6)$coef
+
+
+```
+
+Add alcohol
+
+```{r}
+
+red_lr_new_fs2_1 <- glm(formula = redwine_data$qual_above_med ~ redwine_data$alcohol + redwine_data$citric.acid,
+              family = binomial(link="logit"))
+
+red_lr_new_fs2_2 <- glm(formula = redwine_data$qual_above_med ~ redwine_data$alcohol + redwine_data$residual.sugar,
+              family = binomial(link="logit"))
+
+red_lr_new_fs2_3 <- glm(formula = redwine_data$qual_above_med ~ redwine_data$alcohol + redwine_data$chlorides,
+              family = binomial(link="logit"))
+
+red_lr_new_fs2_4 <- glm(formula = redwine_data$qual_above_med ~ redwine_data$alcohol + redwine_data$free.sulfur.dioxide,
+              family = binomial(link="logit"))
+
+red_lr_new_fs2_5 <- glm(formula = redwine_data$qual_above_med ~ redwine_data$alcohol + redwine_data$sulphates,
+              family = binomial(link="logit"))
+
+summary(red_lr_new_fs2_1)$coef
+summary(red_lr_new_fs2_2)$coef
+summary(red_lr_new_fs2_3)$coef
+summary(red_lr_new_fs2_4)$coef
+summary(red_lr_new_fs2_5)$coef
+
+
+```
+
+Add sulphates
+
+```{r}
+
+red_lr_new_fs3_1 <- glm(formula = redwine_data$qual_above_med ~ redwine_data$alcohol + redwine_data$sulphates +  redwine_data$citric.acid,
+              family = binomial(link="logit"))
+
+red_lr_new_fs3_2 <- glm(formula = redwine_data$qual_above_med ~ redwine_data$alcohol + redwine_data$sulphates +  redwine_data$residual.sugar,
+              family = binomial(link="logit"))
+
+red_lr_new_fs3_3 <- glm(formula = redwine_data$qual_above_med ~ redwine_data$alcohol + redwine_data$sulphates +  redwine_data$chlorides,
+              family = binomial(link="logit"))
+
+red_lr_new_fs3_4 <- glm(formula = redwine_data$qual_above_med ~ redwine_data$alcohol + redwine_data$sulphates +  redwine_data$free.sulfur.dioxide,
+              family = binomial(link="logit"))
+
+
+summary(red_lr_new_fs3_1)$coef
+summary(red_lr_new_fs3_2)$coef
+summary(red_lr_new_fs3_3)$coef
+summary(red_lr_new_fs3_4)$coef
+
+
+```
+
+```{r}
+
+
+red_lr_new_fs4_1 <- glm(formula = redwine_data$qual_above_med ~ redwine_data$alcohol + redwine_data$sulphates + redwine_data$citric.acid +  redwine_data$residual.sugar,
+              family = binomial(link="logit"))
+
+red_lr_new_fs4_2 <- glm(formula = redwine_data$qual_above_med ~ redwine_data$alcohol + redwine_data$sulphates + redwine_data$citric.acid +  redwine_data$chlorides,
+              family = binomial(link="logit"))
+
+red_lr_new_fs4_3 <- glm(formula = redwine_data$qual_above_med ~ redwine_data$alcohol + redwine_data$sulphates + redwine_data$citric.acid +  redwine_data$free.sulfur.dioxide,
+              family = binomial(link="logit"))
+
+
+summary(red_lr_new_fs4_1)$coef
+summary(red_lr_new_fs4_2)$coef
+summary(red_lr_new_fs4_3)$coef
+
+
+```
+
+Add chlorides
+redwine_data$alcohol + redwine_data$sulphates + redwine_data$citric.acid +  redwine_data$chlorides
+
+```{r}
+
+
+red_lr_new_fs5_1 <- glm(formula = redwine_data$qual_above_med ~ redwine_data$alcohol + redwine_data$sulphates + redwine_data$citric.acid + redwine_data$chlorides +  redwine_data$residual.sugar,
+              family = binomial(link="logit"))
+
+red_lr_new_fs5_2 <- glm(formula = redwine_data$qual_above_med ~ redwine_data$alcohol + redwine_data$sulphates + redwine_data$citric.acid + redwine_data$chlorides +  redwine_data$free.sulfur.dioxide,
+              family = binomial(link="logit"))
+
+
+summary(red_lr_new_fs5_1)$coef
+summary(red_lr_new_fs5_2)$coef
+
+
+```
+
+if 0.001, stop here.
+
+Significant var:
+
+if 0.05, add free sulfur dioxide
+
+```{r}
+
+
+red_lr_new_fs6_1 <- glm(formula = redwine_data$qual_above_med ~ redwine_data$alcohol + redwine_data$sulphates + redwine_data$citric.acid + redwine_data$chlorides +  redwine_data$free.sulfur.dioxide + redwine_data$residual.sugar,
+              family = binomial(link="logit"))
+
+
+summary(red_lr_new_fs6_1)$coef
+
+```
+
+Dont add residual sugar. End FS here.
+
+Significant var
+redwine_data$alcohol + redwine_data$sulphates + redwine_data$citric.acid + redwine_data$chlorides +  redwine_data$free.sulfur.dioxide
+
+White Wine
+
+corr_white_new <- cor(white[, c("fixed.acidity", "volatile.acidity", "citric.acid", 
+"residual.sugar", "chlorides", "free.sulfur.dioxide", "sulphates")])
+
+```{r}
+
+white_lr_new_1 <- glm(formula = whitewine_data$qual_above_med ~ 
+                whitewine_data$fixed.acidity + whitewine_data$volatile.acidity +
+                  whitewine_data$citric.acid + whitewine_data$residual.sugar + whitewine_data$chlorides +
+                  whitewine_data$free.sulfur.dioxide +  whitewine_data$sulphates,
+              family = binomial(link="logit"))
+
+summary(white_lr_new_1)
+
+```
+
+whitewine_data$citric.acid 0.401049
+
+```{r}
+
+white_lr_new_2 <- glm(formula = whitewine_data$qual_above_med ~ 
+                whitewine_data$fixed.acidity + whitewine_data$volatile.acidity +
+                   whitewine_data$residual.sugar + whitewine_data$chlorides +
+                  whitewine_data$free.sulfur.dioxide +  whitewine_data$sulphates,
+              family = binomial(link="logit"))
+
+summary(white_lr_new_2)
+
+```
+
+whitewine_data$free.sulfur.dioxide  0.105479 
+
+```{r}
+
+white_lr_new_3 <- glm(formula = whitewine_data$qual_above_med ~ 
+                whitewine_data$fixed.acidity + whitewine_data$volatile.acidity +
+                   whitewine_data$residual.sugar + whitewine_data$chlorides +  whitewine_data$sulphates,
+              family = binomial(link="logit"))
+
+summary(white_lr_new_3)
+
+```
+
+
+Stop here, nothing to remove.
+
+Significant var:
+whitewine_data$fixed.acidity + whitewine_data$volatile.acidity +
+                   whitewine_data$residual.sugar + whitewine_data$chlorides +  whitewine_data$sulphates
+
+FS
+
+corr_white_new <- cor(white[, c("fixed.acidity", "volatile.acidity", "citric.acid", 
+"residual.sugar", "chlorides", "free.sulfur.dioxide", "sulphates")])
+
+```{r}
+
+white_lr_new_fs1_1 <- glm(formula = whitewine_data$qual_above_med ~ whitewine_data$fixed.acidity,
+              family = binomial(link="logit"))
+
+white_lr_new_fs1_2 <- glm(formula = whitewine_data$qual_above_med ~ whitewine_data$volatile.acidity,
+              family = binomial(link="logit"))
+
+white_lr_new_fs1_3 <- glm(formula = whitewine_data$qual_above_med ~ whitewine_data$citric.acid,
+              family = binomial(link="logit"))
+
+white_lr_new_fs1_4 <- glm(formula = whitewine_data$qual_above_med ~ whitewine_data$residual.sugar,
+              family = binomial(link="logit"))
+
+white_lr_new_fs1_5 <- glm(formula = whitewine_data$qual_above_med ~ whitewine_data$chlorides,
+              family = binomial(link="logit"))
+
+white_lr_new_fs1_6 <- glm(formula = whitewine_data$qual_above_med ~ whitewine_data$free.sulfur.dioxide,
+              family = binomial(link="logit"))
+
+white_lr_new_fs1_7 <- glm(formula = whitewine_data$qual_above_med ~ whitewine_data$sulphates,
+              family = binomial(link="logit"))
+
+summary(white_lr_new_fs1_1)$coef
+summary(white_lr_new_fs1_2)$coef
+summary(white_lr_new_fs1_3)$coef
+summary(white_lr_new_fs1_4)$coef
+summary(white_lr_new_fs1_5)$coef
+summary(white_lr_new_fs1_6)$coef
+summary(white_lr_new_fs1_7)$coef
+```
+
+Add chlorides
+
+```{r}
+
+white_lr_new_fs2_1 <- glm(formula = whitewine_data$qual_above_med ~ whitewine_data$chlorides + whitewine_data$fixed.acidity,
+              family = binomial(link="logit"))
+
+white_lr_new_fs2_2 <- glm(formula = whitewine_data$qual_above_med ~ whitewine_data$chlorides + whitewine_data$volatile.acidity,
+              family = binomial(link="logit"))
+
+white_lr_new_fs2_3 <- glm(formula = whitewine_data$qual_above_med ~ whitewine_data$chlorides + whitewine_data$citric.acid,
+              family = binomial(link="logit"))
+
+white_lr_new_fs2_4 <- glm(formula = whitewine_data$qual_above_med ~ whitewine_data$chlorides + whitewine_data$residual.sugar,
+              family = binomial(link="logit"))
+
+white_lr_new_fs2_5 <- glm(formula = whitewine_data$qual_above_med ~ whitewine_data$chlorides + whitewine_data$free.sulfur.dioxide,
+              family = binomial(link="logit"))
+
+white_lr_new_fs2_6 <- glm(formula = whitewine_data$qual_above_med ~ whitewine_data$chlorides +  whitewine_data$sulphates,
+              family = binomial(link="logit"))
+
+summary(white_lr_new_fs2_1)$coef
+summary(white_lr_new_fs2_2)$coef
+summary(white_lr_new_fs2_3)$coef
+summary(white_lr_new_fs2_4)$coef
+summary(white_lr_new_fs2_5)$coef
+summary(white_lr_new_fs2_6)$coef
+
+```
+
+whitewine_data$volatile.acidity 1.443031e-06
+
+```{r}
+
+white_lr_new_fs3_1 <- glm(formula = whitewine_data$qual_above_med ~ whitewine_data$chlorides + whitewine_data$volatile.acidity +  whitewine_data$fixed.acidity,
+              family = binomial(link="logit"))
+
+white_lr_new_fs3_2 <- glm(formula = whitewine_data$qual_above_med ~ whitewine_data$chlorides + whitewine_data$volatile.acidity +  whitewine_data$citric.acid,
+              family = binomial(link="logit"))
+
+white_lr_new_fs3_3 <- glm(formula = whitewine_data$qual_above_med ~ whitewine_data$chlorides + whitewine_data$volatile.acidity +  whitewine_data$residual.sugar,
+              family = binomial(link="logit"))
+
+white_lr_new_fs3_4 <- glm(formula = whitewine_data$qual_above_med ~ whitewine_data$chlorides + whitewine_data$volatile.acidity +  whitewine_data$free.sulfur.dioxide,
+              family = binomial(link="logit"))
+
+white_lr_new_fs3_5 <- glm(formula = whitewine_data$qual_above_med ~ whitewine_data$chlorides +whitewine_data$volatile.acidity + whitewine_data$sulphates,
+              family = binomial(link="logit"))
+
+summary(white_lr_new_fs3_1)$coef
+summary(white_lr_new_fs3_2)$coef
+summary(white_lr_new_fs3_3)$coef
+summary(white_lr_new_fs3_4)$coef
+summary(white_lr_new_fs3_5)$coef
+
+```
+
+whitewine_data$fixed.acidity 7.237755e-06
+
+```{r}
+
+white_lr_new_fs4_1 <- glm(formula = whitewine_data$qual_above_med ~ whitewine_data$chlorides + whitewine_data$volatile.acidity + whitewine_data$fixed.acidity +   whitewine_data$citric.acid,
+              family = binomial(link="logit"))
+
+white_lr_new_fs4_2 <- glm(formula = whitewine_data$qual_above_med ~ whitewine_data$chlorides + whitewine_data$volatile.acidity + whitewine_data$fixed.acidity +  whitewine_data$residual.sugar,
+              family = binomial(link="logit"))
+
+white_lr_new_fs4_3 <- glm(formula = whitewine_data$qual_above_med ~ whitewine_data$chlorides + whitewine_data$volatile.acidity + whitewine_data$fixed.acidity + whitewine_data$free.sulfur.dioxide,
+              family = binomial(link="logit"))
+
+white_lr_new_fs4_4 <- glm(formula = whitewine_data$qual_above_med ~ whitewine_data$chlorides +whitewine_data$volatile.acidity + whitewine_data$fixed.acidity +  whitewine_data$sulphates,
+              family = binomial(link="logit"))
+
+summary(white_lr_new_fs4_1)$coef
+summary(white_lr_new_fs4_2)$coef
+summary(white_lr_new_fs4_3)$coef
+summary(white_lr_new_fs4_4)$coef
+
+```
+
+```{r}
+
+white_lr_new_fs5_1 <- glm(formula = whitewine_data$qual_above_med ~ whitewine_data$chlorides + whitewine_data$volatile.acidity + whitewine_data$fixed.acidity +  whitewine_data$sulphates +   whitewine_data$citric.acid,
+              family = binomial(link="logit"))
+
+white_lr_new_fs5_2 <- glm(formula = whitewine_data$qual_above_med ~ whitewine_data$chlorides + whitewine_data$volatile.acidity + whitewine_data$fixed.acidity +  whitewine_data$sulphates +  whitewine_data$residual.sugar,
+              family = binomial(link="logit"))
+
+white_lr_new_fs5_3 <- glm(formula = whitewine_data$qual_above_med ~ whitewine_data$chlorides + whitewine_data$volatile.acidity + whitewine_data$fixed.acidity +  whitewine_data$sulphates +  whitewine_data$free.sulfur.dioxide,
+              family = binomial(link="logit"))
+
+summary(white_lr_new_fs5_1)$coef
+summary(white_lr_new_fs5_2)$coef
+summary(white_lr_new_fs5_3)$coef
+
+```
+
+whitewine_data$residual.sugar 3.793700e-04
+
+```{r}
+
+white_lr_new_fs6_1 <- glm(formula = whitewine_data$qual_above_med ~ whitewine_data$chlorides + whitewine_data$volatile.acidity + whitewine_data$fixed.acidity +  whitewine_data$sulphates + whitewine_data$residual.sugar +  whitewine_data$citric.acid,
+              family = binomial(link="logit"))
+
+white_lr_new_fs6_2 <- glm(formula = whitewine_data$qual_above_med ~ whitewine_data$chlorides + whitewine_data$volatile.acidity + whitewine_data$fixed.acidity +  whitewine_data$sulphates + whitewine_data$residual.sugar +  whitewine_data$free.sulfur.dioxide,
+              family = binomial(link="logit"))
+
+summary(white_lr_new_fs6_1)$coef
+summary(white_lr_new_fs6_2)$coef
+
+```
+
+Dont add any. End FS here.
+
+Significant var:
+whitewine_data$chlorides + whitewine_data$volatile.acidity + whitewine_data$fixed.acidity +  whitewine_data$sulphates +  whitewine_data$residual.sugar
+
 
 Red Wine
 

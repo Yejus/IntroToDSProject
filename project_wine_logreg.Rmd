@@ -13,6 +13,9 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ```{r}
 #Loading in Data and necessary libraries
+library(caret)
+library(ROCR)
+library(glmnet)
 
 redwine_data <- read.csv("winequality-red.csv")
 whitewine_data <- read.csv2("winequality-white.csv")
@@ -40,6 +43,102 @@ whitewine_data$qual_above_med <- (whitewine_data$quality > 6)
 wine_data$qual_above_med <- (wine_data$quality > 6)
 
 ```
+
+
+Assumptions of Logistic regression
+
+First, binary logistic regression requires the dependent variable to be binary and ordinal logistic regression requires the dependent variable to be ordinal.
+
+Second, logistic regression requires the observations to be independent of each other.  In other words, the observations should not come from repeated measurements or matched data.
+
+Third, logistic regression requires there to be little or no multicollinearity among the independent variables.  This means that the independent variables should not be too highly correlated with each other.
+
+Fourth, logistic regression assumes linearity of independent variables and log odds.  although this analysis does not require the dependent and independent variables to be related linearly, it requires that the independent variables are linearly related to the log odds.
+
+Finally, logistic regression typically requires a large sample size.  A general guideline is that you need at minimum of 10 cases with the least frequent outcome for each independent variable in your model. For example, if you have 5 independent variables and the expected probability of your least frequent outcome is .10, then you would need a minimum sample size of 500 (10*5 / .10).
+
+```{r}
+
+pairs(redwine_data[,-c(13,14)])
+pairs(whitewine_data[,-c(13,14)])
+pairs(wine_data[,-c(13,14)])
+
+```
+
+Red Wine
+Fixed.acidity linearly correlated with citric acid, density and pH
+citric acid with density and pH
+Residual Sugar with density
+Free sulfur dioxide with total sulfur dioxide
+Density with alcohol
+
+White Wine
+Fixed.acidity linearly correlated with citric acid, density and pH
+citric acid with density and pH
+Free sulfur dioxide with total sulfur dioxide
+Density with alcohol
+
+Multicollinearity affects the coefficients and p-values, but it does not influence the predictions, precision of the predictions, and the goodness-of-fit statistics. If your primary goal is to make predictions, and you don’t need to understand the role of each independent variable, you don’t need to reduce severe multicollinearity.
+
+The fact that some or all predictor variables are correlated among themselves does not, in general, inhibit our ability to obtain a good fit nor does it tend to affect inferences about mean responses or predictions of new observations.  —Applied Linear Statistical Models, p289, 4th Edition.
+
+Remove some of the highly correlated independent variables.
+Linearly combine the independent variables, such as adding them together.
+Perform an analysis designed for highly correlated variables, such as principal components analysis or partial least squares regression.
+
+```{r}
+
+redwine_pca <- prcomp(redwine_data[,-c(13,14)], center = TRUE,scale. = TRUE)
+summary(redwine_pca)
+
+redwine_pca$rotation
+redwine_pca$x
+
+```
+
+```{r}
+
+redwine_mat <- as.matrix(redwine_data[,c(1:11)])
+
+cv_result <- cv.glmnet(x = redwine_mat, y = redwine_data$qual_above_med,family= "binomial")
+
+print(cv_result$lambda.min)
+plot(cv_result)
+
+tmp <- coef(glmnet(x = redwine_mat, y = redwine_data$qual_above_med,family= "binomial", lambda = cv_result$lambda.min))
+rownames(tmp)[tmp[,1] != 0]
+
+```
+
+```{r}
+
+whitewine_mat <- as.matrix(whitewine_data[,c(1:11)])
+
+cv_result <- cv.glmnet(x = whitewine_mat, y = whitewine_data$qual_above_med,family= "binomial")
+
+print(cv_result$lambda.min)
+plot(cv_result)
+
+tmp <- coef(glmnet(x = whitewine_mat, y = whitewine_data$qual_above_med,family= "binomial", lambda = cv_result$lambda.min))
+rownames(tmp)[tmp[,1] != 0]
+
+```
+
+```{r}
+
+wine_mat <- as.matrix(wine_data[,c(1:11)])
+
+cv_result <- cv.glmnet(x = wine_mat, y = wine_data$qual_above_med,family= "binomial")
+
+print(cv_result$lambda.min)
+plot(cv_result)
+
+tmp <- coef(glmnet(x = wine_mat, y = wine_data$qual_above_med,family= "binomial", lambda = cv_result$lambda.min))
+rownames(tmp)[tmp[,1] != 0]
+
+```
+
+Both
 
 Red Wine
 
@@ -1329,6 +1428,243 @@ summary(redwhite_lr_fs11_1)$coef
 ```
 
 pval is higher than 0.05, so we stop here.
+
+ROC Curves
+
+```{r}
+
+trainIndex <- createDataPartition(redwine_data$quality, p = .8, 
+                                  list = FALSE, 
+                                  times = 1)
+
+redwine_data_train <- redwine_data[trainIndex,]
+  
+redwine_data_test <-  redwine_data[-trainIndex,]
+
+```
+
+Red wine:
+
+Full model
+
+```{r}
+
+pred <- predict(red_lr,  type="response")
+predObj <- prediction(pred, redwine_data$qual_above_med)
+rocObj = performance(predObj, measure="tpr", x.measure="fpr")
+aucObj = performance(predObj, measure="auc")
+plot(rocObj, main = paste("Area under the curve:",
+round(aucObj@y.values[[1]] ,4)))
+
+```
+
+Backward elim pval 0.05
+
+```{r}
+
+pred <- predict(red_lr_4,  type="response")
+predObj <- prediction(pred, redwine_data$qual_above_med )
+rocObj = performance(predObj, measure="tpr", x.measure="fpr")
+aucObj = performance(predObj, measure="auc")
+plot(rocObj, main = paste("Area under the curve:",
+round(aucObj@y.values[[1]] ,4)))
+
+```
+
+Backward elim p val 0.001
+
+```{r}
+
+pred <- predict(red_lr_8,  type="response")
+predObj <- prediction(pred, redwine_data$qual_above_med )
+rocObj = performance(predObj, measure="tpr", x.measure="fpr")
+aucObj = performance(predObj, measure="auc")
+plot(rocObj, main = paste("Area under the curve:",
+round(aucObj@y.values[[1]] ,4)))
+
+```
+
+
+FS p val 0.05
+
+```{r}
+
+pred <- predict(red_lr_fs8_3,  type="response")
+predObj <- prediction(pred, redwine_data$qual_above_med )
+rocObj = performance(predObj, measure="tpr", x.measure="fpr")
+aucObj = performance(predObj, measure="auc")
+plot(rocObj, main = paste("Area under the curve:",
+round(aucObj@y.values[[1]] ,4)))
+
+```
+
+FS p val 0.001
+
+```{r}
+
+pred <- predict(red_lr_fs4_6,  type="response")
+predObj <- prediction(pred, redwine_data$qual_above_med )
+rocObj = performance(predObj, measure="tpr", x.measure="fpr")
+aucObj = performance(predObj, measure="auc")
+plot(rocObj, main = paste("Area under the curve:",
+round(aucObj@y.values[[1]] ,4)))
+
+```
+
+
+White wine:
+
+Full model
+
+```{r}
+
+pred <- predict(white_lr_1,  type="response")
+predObj <- prediction(pred, whitewine_data$qual_above_med)
+rocObj = performance(predObj, measure="tpr", x.measure="fpr")
+aucObj = performance(predObj, measure="auc")
+plot(rocObj, main = paste("Area under the curve:",
+round(aucObj@y.values[[1]] ,4)))
+
+```
+
+Backward Elim pval 0.05
+
+```{r}
+
+pred <- predict(white_lr_4,  type="response")
+predObj <- prediction(pred, whitewine_data$qual_above_med)
+rocObj = performance(predObj, measure="tpr", x.measure="fpr")
+aucObj = performance(predObj, measure="auc")
+plot(rocObj, main = paste("Area under the curve:",
+round(aucObj@y.values[[1]] ,4)))
+
+```
+
+Backward Elim pval 0.001
+
+```{r}
+
+pred <- predict(white_lr_6,  type="response")
+predObj <- prediction(pred, whitewine_data$qual_above_med)
+rocObj = performance(predObj, measure="tpr", x.measure="fpr")
+aucObj = performance(predObj, measure="auc")
+plot(rocObj, main = paste("Area under the curve:",
+round(aucObj@y.values[[1]] ,4)))
+
+```
+
+FS pval 0.05 and 0.001
+
+```{r}
+
+pred <- predict(white_lr_fs8_1 ,  type="response")
+predObj <- prediction(pred, whitewine_data$qual_above_med)
+rocObj = performance(predObj, measure="tpr", x.measure="fpr")
+aucObj = performance(predObj, measure="auc")
+plot(rocObj, main = paste("Area under the curve:",
+round(aucObj@y.values[[1]] ,4)))
+
+```
+
+
+Red and White wine:
+
+Full model
+
+```{r}
+
+pred <- predict(redwhite_lr_1,  type="response")
+predObj <- prediction(pred, wine_data$qual_above_med)
+rocObj = performance(predObj, measure="tpr", x.measure="fpr")
+aucObj = performance(predObj, measure="auc")
+plot(rocObj, main = paste("Area under the curve:",
+round(aucObj@y.values[[1]] ,4)))
+
+```
+
+Backward Elim pval 0.05
+
+```{r}
+
+pred <- predict(redwhite_lr_2,  type="response")
+predObj <- prediction(pred, wine_data$qual_above_med)
+rocObj = performance(predObj, measure="tpr", x.measure="fpr")
+aucObj = performance(predObj, measure="auc")
+plot(rocObj, main = paste("Area under the curve:",
+round(aucObj@y.values[[1]] ,4)))
+
+```
+
+Backward Elim pval 0.001
+
+```{r}
+
+pred <- predict(redwhite_lr_3,  type="response")
+predObj <- prediction(pred, wine_data$qual_above_med)
+rocObj = performance(predObj, measure="tpr", x.measure="fpr")
+aucObj = performance(predObj, measure="auc")
+plot(rocObj, main = paste("Area under the curve:",
+round(aucObj@y.values[[1]] ,4)))
+
+```
+
+FS pval 0.05
+
+```{r}
+
+pred <- predict(redwhite_lr_fs10_2,  type="response")
+predObj <- prediction(pred, wine_data$qual_above_med)
+rocObj = performance(predObj, measure="tpr", x.measure="fpr")
+aucObj = performance(predObj, measure="auc")
+plot(rocObj, main = paste("Area under the curve:",
+round(aucObj@y.values[[1]] ,4)))
+
+```
+
+FS pval 0.001
+
+```{r}
+
+pred <- predict(redwhite_lr_fs5_3,  type="response")
+predObj <- prediction(pred, wine_data$qual_above_med)
+rocObj = performance(predObj, measure="tpr", x.measure="fpr")
+aucObj = performance(predObj, measure="auc")
+plot(rocObj, main = paste("Area under the curve:",
+round(aucObj@y.values[[1]] ,4)))
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

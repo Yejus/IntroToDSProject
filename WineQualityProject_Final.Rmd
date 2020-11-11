@@ -1,13 +1,80 @@
+---
+title: "Wine Quality Data Project"
+author: "Anant Jain, Eddie Lim, Joanas Tan, Rishav Koirala"
+date: "11/11/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
 library(dplyr)
 library(e1071)
 library(caret)
 library(ROCR)
 
-## All Wine 
+```
 
-### Loading the data 
+### Introduction 
+
+**Data Information**  
+The data set we have chosen are related to red and white variants of the Portuguese "Vinho Verde" wine. There are a total of 12 inputs variables obtained using physicochemical tests in the data set, which are: 
+1 - fixed acidity  
+2 - volatile acidity  
+3 - citric acid  
+4 - residual sugar  
+5 - chlorides  
+6 - free sulfur dioxide  
+7 - total sulfur dioxide  
+8 - density  
+9 - pH  
+10 - sulphates  
+11 - alcohol  
+Output variable (based on sensory data):  
+12 - quality (score between 0 and 10)  
+
+**Research Question**  
+Can we predict with good accuracy the quality of wine for both the red and the white varieties by considering their chemical properties, and identify the most significant predictors that make a good red wine or white wine? 
+
+**Research Approach**  
+01 - EDA  
+* Representing each variable as a boxplot  
+* Scatterplot matrix  
+
+02 - Building Predictors  
+* Logistic Regression  
+* Decision Tree  
+* Naive Bayes  
+
+03 - Identifying Significant Predictors  
+* PCA  
+* Stepwise Regression  
+
+### Preparing the data 
+
+```{r}
 data_allwine <- read.csv("~/projects/yalenus/IntroToDSProject/wine.csv")
+data_redwine <- read.csv("~/Desktop/YaleNUS/Y3S1/IntrotoDS/Assignments/DSProj_NaiveBayes/winequality-red.csv")
+data_whitewine <- read.csv("~/Desktop/YaleNUS/Y3S1/IntrotoDS/Assignments/DSProj_NaiveBayes/winequality-white.csv", sep=";")
+```
 
+### Exploratory Data Analysis (EDA)
+
+**Boxplots of each variable by type of wine (red/white)**  
+
+```{r}
+
+# box-and-whiskers plot for each variable by type
+par(mfrow=c(2,3))
+
+for(i in 1:11){
+  boxplot(data_allwine[,i] ~data_allwine$type, ylab = names(data_allwine)[i])
+}
+```
+
+### Building Predictors 
+
+**Assign Labels**  
+```{r}
 
 data_all_wine_labelled <- mutate(data_allwine,
                                  label = case_when(
@@ -15,7 +82,24 @@ data_all_wine_labelled <- mutate(data_allwine,
                                    quality <= 6 ~ "bad"
                                  ))
 
+data_red_wine_labelled <- mutate(data_redwine,
+       label = case_when(
+         quality > 6 ~ "good", 
+         quality <= 6 ~ "bad"
+       ))
 
+data_white_wine_labelled <- mutate(data_whitewine,
+                                label = case_when(
+                                  quality > 6 ~ "good", 
+                                  quality <= 6 ~ "bad"
+                                ))
+
+```
+
+**Naive Bayes**  
+
+**All Wines**  
+```{r}
 ### All Wine NB Analysis
 # Note that 'type' is also used as a feature in predicting quality here
 
@@ -34,67 +118,24 @@ score_allwine <- nb_prediction_allwine[, c("good")]
 
 actual_class_allwine <- testdata_allwine$label == 'good' 
 pred_allwine <- prediction(score_allwine, actual_class_allwine)
-
 perf_allwine <- performance(pred_allwine, "tpr", "fpr")
+```
+
+```{r}
 plot(perf_allwine, lwd=2, xlab="False Positive Rate (FPR)", ylab="True Positive Rate (TPR)")
 abline(a=0, b=1, col="gray50", lty=3)
+```
 
 
+```{r}
 auc_allwine <- performance(pred_allwine, "auc")
 auc_allwine <- unlist(slot(auc_allwine, "y.values"))
 auc_allwine
+```
 
 
-### Loading the data
-
-data_redwine <- read.csv("~/Desktop/YaleNUS/Y3S1/IntrotoDS/Assignments/DSProj_NaiveBayes/winequality-red.csv")
-data_whitewine <- read.csv("~/Desktop/YaleNUS/Y3S1/IntrotoDS/Assignments/DSProj_NaiveBayes/winequality-white.csv", sep=";")
-
-
-### Check for NAs 
-sum(is.na(data_redwine))
-sum(is.na(data_whitewine))
-
-### Assign labels 
-data_red_wine_labelled <- mutate(data_redwine,
-       label = case_when(
-         quality > 6 ~ "good", 
-         quality <= 6 ~ "bad"
-       ))
-
-data_white_wine_labelled <- mutate(data_whitewine,
-                                label = case_when(
-                                  quality > 6 ~ "good", 
-                                  quality <= 6 ~ "bad"
-                                ))
-
-### Red Wine NB Analysis
-indxTrain <- createDataPartition(y = data_red_wine_labelled$label ,p = 0.8,list = FALSE) # uses random sampling
-traindata <- data_red_wine_labelled[indxTrain, !(names(data_red_wine_labelled) %in% c('quality'))]
-testdata <- data_red_wine_labelled[-indxTrain, !(names(data_red_wine_labelled) %in% c('quality'))]
-
-nb_model <- naiveBayes(as.factor(label) ~ . , traindata, laplace=.01)
-
-nb_prediction <- predict(nb_model,
-                         # remove column "label"
-                         testdata[,!(names(data_red_wine_labelled) %in% c('label'))],
-                         type='raw') 
-
-score <- nb_prediction[, c("good")]
-
-actual_class <- testdata$label == 'good' 
-pred <- prediction(score, actual_class)
-
-perf <- performance(pred, "tpr", "fpr")
-plot(perf, lwd=2, xlab="False Positive Rate (FPR)", ylab="True Positive Rate (TPR)")
-abline(a=0, b=1, col="gray50", lty=3)
-
-
-auc <- performance(pred, "auc")
-auc <- unlist(slot(auc, "y.values"))
-auc
-
-
+**White Wine**
+``` {r}
 ### White Wine NB Analysis
 indxTrain_white <- createDataPartition(y = data_white_wine_labelled$label ,p = 0.8,list = FALSE)
 traindata_white <- data_white_wine_labelled[indxTrain_white, !(names(data_white_wine_labelled) %in% c('quality'))]
@@ -111,18 +152,59 @@ score_white <- nb_prediction_white[, c("good")]
 
 actual_class_white <- testdata_white$label == 'good' 
 pred_white <- prediction(score_white, actual_class_white)
-
 perf_white <- performance(pred_white, "tpr", "fpr")
 
+```
+
+
+``` {r}
 plot(perf_white, lwd=2, xlab="False Positive Rate (FPR)", ylab="True Positive Rate (TPR)")
 abline(a=0, b=1, col="gray50", lty=3)
+```
 
+
+``` {r}
 auc_white <- performance(pred_white, "auc")
 auc_white <- unlist(slot(auc_white, "y.values"))
 auc_white
 
+```
 
-### Side-by-side Plot 
+**Red Wine**
+``` {r}
+indxTrain <- createDataPartition(y = data_red_wine_labelled$label ,p = 0.8,list = FALSE) # uses random sampling
+traindata <- data_red_wine_labelled[indxTrain, !(names(data_red_wine_labelled) %in% c('quality'))]
+testdata <- data_red_wine_labelled[-indxTrain, !(names(data_red_wine_labelled) %in% c('quality'))]
+
+nb_model <- naiveBayes(as.factor(label) ~ . , traindata, laplace=.01)
+
+nb_prediction <- predict(nb_model,
+                         # remove column "label"
+                         testdata[,!(names(data_red_wine_labelled) %in% c('label'))],
+                         type='raw') 
+
+score <- nb_prediction[, c("good")]
+
+actual_class <- testdata$label == 'good' 
+pred <- prediction(score, actual_class)
+perf <- performance(pred, "tpr", "fpr")
+```
+
+``` {r}
+plot(perf, lwd=2, xlab="False Positive Rate (FPR)", ylab="True Positive Rate (TPR)")
+abline(a=0, b=1, col="gray50", lty=3)
+```
+
+``` {r}
+auc <- performance(pred, "auc")
+auc <- unlist(slot(auc, "y.values"))
+auc
+```
+
+
+**Side-by-side Plot**
+
+``` {r}
 par(mfrow=c(1,3)) 
 plot(perf_allwine, lwd=2, main="All Wine Quality Label NB Model Prediction Perf", xlab="False Positive Rate (FPR)", ylab="True Positive Rate (TPR)")
 abline(a=0, b=1, col="gray50", lty=3)
@@ -130,8 +212,10 @@ plot(perf, lwd=2, main="Red Wine Quality Label NB Model Prediction Perf", xlab="
 abline(a=0, b=1, col="gray50", lty=3)
 plot(perf_white, lwd=2, main="White Wine Quality Label NB Model Prediction Perf", xlab="False Positive Rate (FPR)", ylab="True Positive Rate (TPR)")
 abline(a=0, b=1, col="gray50", lty=3)
+```
 
-### Multiple lines in single plot
+**Multiple lines in single plot**
+``` {r}
 par(mfrow=c(1,1)) 
 plot(perf_allwine, lwd=2, main="All Wine Quality Label NB Model Prediction Perf", xlab="False Positive Rate (FPR)", ylab="True Positive Rate (TPR)")
 abline(a=0, b=1, col="gray50", lty=3)
@@ -147,8 +231,11 @@ legend("topleft",
                   "All Wine"),
        col = c("red", "blue", "black"),
        pch = c(0, 0, 0))
+```
 
-
+**AUCs**
+```{r}
 print(paste0("AUC of NB Model (All Wine):", auc_allwine))
 print(paste0("AUC of NB Model (Red Wine):", auc))
 print(paste0("AUC of NB Model (White Wine):", auc_white))
+```

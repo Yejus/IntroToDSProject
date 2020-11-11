@@ -310,7 +310,7 @@ summary(red_lr_new_fs4_3)$coef
 ```
 
 Add chlorides
-redwine_data$alcohol + redwine_data$sulphates + redwine_data$citric.acid +  redwine_data$chlorides
+
 
 ```{r}
 
@@ -331,6 +331,7 @@ summary(red_lr_new_fs5_2)$coef
 if 0.001, stop here.
 
 Significant var:
+redwine_data$alcohol + redwine_data$sulphates + redwine_data$citric.acid +  redwine_data$chlorides
 
 if 0.05, add free sulfur dioxide
 
@@ -1850,6 +1851,8 @@ ROC Curves
 
 ```{r}
 
+set.seed(2121)
+
 trainIndex <- createDataPartition(redwine_data$quality, p = .8, 
                                   list = FALSE, 
                                   times = 1)
@@ -1860,13 +1863,124 @@ redwine_data_test <-  redwine_data[-trainIndex,]
 
 ```
 
+```{r}
+
+red_lr_train <- glm(formula = qual_above_med ~ 
+                fixed.acidity + volatile.acidity + citric.acid
+              + residual.sugar + chlorides + free.sulfur.dioxide
+              + total.sulfur.dioxide + density + pH 
+              + sulphates + alcohol, data = redwine_data_train,
+              family = binomial(link="logit"))
+
+summary(red_lr_train)
+
+pred = predict.glm(red_lr_train, redwine_data_test,  type="response")
+predObj <- prediction(pred, redwine_data_test$qual_above_med)
+rocObj = performance(predObj, measure="tpr", x.measure="fpr")
+aucObj = performance(predObj, measure="auc")
+plot(rocObj, main = paste("Area under the curve:",
+round(aucObj@y.values[[1]] ,4)))
+
+```
+
+corr_red_new <-cor(red[,c("citric.acid", 
+"residual.sugar", "chlorides", "free.sulfur.dioxide", "sulphates", "alcohol")])
+
+```{r}
+
+red_lr_train_reduced <- glm(formula = qual_above_med ~ 
+                 citric.acid
+              + residual.sugar + chlorides + free.sulfur.dioxide
+              + sulphates + alcohol, data = redwine_data_train,
+              family = binomial(link="logit"))
+
+summary(red_lr_train_reduced)
+
+pred = predict.glm(red_lr_train_reduced, redwine_data_test,  type="response")
+predObj <- prediction(pred, redwine_data_test$qual_above_med)
+rocObj = performance(predObj, measure="tpr", x.measure="fpr")
+aucObj = performance(predObj, measure="auc")
+plot(rocObj, main = paste("Area under the curve:",
+round(aucObj@y.values[[1]] ,4)))
+
+```
+
+
+
+```{r}
+
+set.seed(2121)
+
+trainIndex <- createDataPartition(whitewine_data$quality, p = .8, 
+                                  list = FALSE, 
+                                  times = 1)
+
+whitewine_data_train <- whitewine_data[trainIndex,]
+  
+whitewine_data_test <-  whitewine_data[-trainIndex,]
+
+```
+
+```{r}
+
+white_lr_train <- glm(formula = qual_above_med ~ 
+                fixed.acidity + volatile.acidity + citric.acid
+              + residual.sugar + chlorides + free.sulfur.dioxide
+              + total.sulfur.dioxide + density + pH 
+              + sulphates + alcohol, data = whitewine_data_train,
+              family = binomial(link="logit"))
+
+pred = predict.glm(white_lr_train, whitewine_data_test,  type="response")
+predObj <- prediction(pred, whitewine_data_test$qual_above_med)
+rocObj = performance(predObj, measure="tpr", x.measure="fpr")
+aucObj = performance(predObj, measure="auc")
+plot(rocObj, main = paste("Area under the curve:",
+round(aucObj@y.values[[1]] ,4)))
+
+```
+
+corr_white_new <- cor(white[, c("fixed.acidity", "volatile.acidity", "citric.acid", 
+"residual.sugar", "chlorides", "free.sulfur.dioxide", "sulphates")])
+
+```{r}
+
+white_lr_train_reduced <- glm(formula = qual_above_med ~ 
+                fixed.acidity + volatile.acidity + citric.acid
+              + residual.sugar + chlorides + free.sulfur.dioxide
+              + sulphates, data = whitewine_data_train,
+              family = binomial(link="logit"))
+
+pred = predict.glm(white_lr_train_reduced, whitewine_data_test,  type="response")
+predObj <- prediction(pred, whitewine_data_test$qual_above_med)
+rocObj = performance(predObj, measure="tpr", x.measure="fpr")
+aucObj = performance(predObj, measure="auc")
+plot(rocObj, main = paste("Area under the curve:",
+round(aucObj@y.values[[1]] ,4)))
+
+```
+
 Red wine:
 
 Full model
 
 ```{r}
 
+summary(red_lr)
+
 pred <- predict(red_lr,  type="response")
+predObj <- prediction(pred, redwine_data$qual_above_med)
+rocObj = performance(predObj, measure="tpr", x.measure="fpr")
+aucObj = performance(predObj, measure="auc")
+plot(rocObj, main = paste("Area under the curve:",
+round(aucObj@y.values[[1]] ,4)))
+
+```
+
+```{r}
+
+summary(red_new_lr)
+
+pred <- predict(red_new_lr,  type="response")
 predObj <- prediction(pred, redwine_data$qual_above_med)
 rocObj = performance(predObj, measure="tpr", x.measure="fpr")
 aucObj = performance(predObj, measure="auc")
@@ -1943,6 +2057,18 @@ plot(rocObj, main = paste("Area under the curve:",
 round(aucObj@y.values[[1]] ,4)))
 
 ```
+
+```{r}
+
+pred <- predict(white_lr_new_1,  type="response")
+predObj <- prediction(pred, whitewine_data$qual_above_med)
+rocObj = performance(predObj, measure="tpr", x.measure="fpr")
+aucObj = performance(predObj, measure="auc")
+plot(rocObj, main = paste("Area under the curve:",
+round(aucObj@y.values[[1]] ,4)))
+
+```
+
 
 Backward Elim pval 0.05
 

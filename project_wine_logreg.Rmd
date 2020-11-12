@@ -18,7 +18,7 @@ library(ROCR)
 library(glmnet)
 
 redwine_data <- read.csv("winequality-red.csv")
-whitewine_data <- read.csv2("winequality-white.csv")
+whitewine_data <- read.csv("winequality-white.csv")
 
 whitewine_data[] <- lapply(whitewine_data, function(x) {
     if(is.factor(x)) {
@@ -2179,34 +2179,100 @@ round(aucObj@y.values[[1]] ,4)))
 
 
 
-```{r}
-fit3  <- rpart(qual_above_med ~  citric.acid + residual.sugar + chlorides + free.sulfur.dioxide + sulphates + alcohol, data=redwine_data,control=rpart.control(minsplit=80), method="class",
-parms=list(split='information'))
 
-summary(fit3)
-rpart.plot(fit3, type=4, extra=1)
+Decision trees 
+
+Redwine with all predictors
+```{r}
+library("rpart")
+library("rpart.plot")
+fit  <- rpart(qual_above_med ~ fixed.acidity + volatile.acidity + citric.acid + residual.sugar + chlorides + free.sulfur.dioxide + total.sulfur.dioxide + density + pH + sulphates + alcohol, data=redwine_data,control=rpart.control(minsplit=160), method="class",
+              parms=list(split='information'))
+summary(fit)
+rpart.plot(fit, type=4, extra=1)
 ```
-```{r}
 
-pred <- prediction(predict(fit3, type = "prob")[, 2], redwine_data$qual_above_med)
+
+
+```{r}
+pred <- prediction(predict(fit, type = "prob")[, 2], redwine_data$qual_above_med)
 plot(performance(pred, "tpr", "fpr"))
 abline(0, 1, lty = 2)
 auc <- performance(pred, "auc")
 auc <- unlist(slot(auc,"y.values"))          
 auc
+```
+
+
+Redwine with correlated varaibles removed
+
+
+```{r}
+fit2  <- rpart(qual_above_med ~  citric.acid + residual.sugar + chlorides + free.sulfur.dioxide + sulphates + alcohol, data=redwine_data,control=rpart.control(minsplit=160), method="class",
+parms=list(split='information'))
+
+summary(fit2)
+rpart.plot(fit3, type=4, extra=1)
+
 
 
 
 ```
 
 
+```{r}
+
+
+pred2 <- prediction(predict(fit2, type = "prob")[, 2], redwine_data$qual_above_med)
+plot(performance(pred2, "tpr", "fpr"))
+abline(0, 1, lty = 2)
+auc <- performance(pred, "auc")
+auc <- unlist(slot(auc,"y.values"))          
+auc
+
+```
 
 
 
+White wine: all predictors 
+```{r}
+fit3  <- rpart( qual_above_med ~ fixed.acidity + volatile.acidity + citric.acid + residual.sugar + chlorides + free.sulfur.dioxide + total.sulfur.dioxide + density + pH + sulphates + alcohol,
+                method="class",
+                data=whitewine_data, control=rpart.control(minsplit=490),
+                parms=list(split='information'))
+
+summary(fit3)
+rpart.plot(fit3, type=4, extra=1)
+```
 
 
+```{r}
+pred3 <- prediction(predict(fit, type = "prob")[, 2], whitewine_data$qual_above_med)
+plot(performance(pred3, "tpr", "fpr"))
+abline(0, 1, lty = 2)
+auc <- performance(pred, "auc")
+auc <- unlist(slot(auc,"y.values"))          
+auc
+```
 
+```{r}
+fit4  <- rpart( qual_above_med ~ fixed.acidity + volatile.acidity + citric.acid + residual.sugar + chlorides + free.sulfur.dioxide + sulphates,
+method="class",
+data=whitewine_data, control=rpart.control(minsplit=490),
+parms=list(split='information'))
 
+summary(fit4)
+rpart.plot(fit4, type=4, extra=1)
+```
+
+```{r}
+pred4 <- prediction(predict(fit, type = "prob")[, 2], whitewine_data$qual_above_med)
+plot(performance(pred4, "tpr", "fpr"))
+abline(0, 1, lty = 2)
+auc <- performance(pred, "auc")
+auc <- unlist(slot(auc,"y.values"))          
+auc
+```
 
 
 

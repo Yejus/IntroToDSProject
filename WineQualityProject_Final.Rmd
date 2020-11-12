@@ -70,7 +70,6 @@ Thus, we will build each of the classifer, evaluate their performance by looking
 ### Preparing the data 
 
 ```{r}
-data_allwine <- read.csv("~/projects/yalenus/IntroToDSProject/wine.csv")
 data_redwine <- read.csv("winequality-red.csv")
 data_whitewine <- read.csv("winequality-white.csv")
 ```
@@ -83,12 +82,10 @@ each other. To this end, we utilize two methods: k-means clustering and Principa
 Before that, we temporarily label the data as red or wine by adding an additional column to the datasets. 
 
 ```{r}
-red$label <- rep("red", nrow(data_redwine))
-white$label <- rep("white", nrow(data_whitewine))
+data_redwine$label <- rep("red", nrow(data_redwine))
+data_whitewine$label <- rep("white", nrow(data_whitewine))
 
-total = data_allwine
-
-total <- rbind(red, white)
+total <- rbind(data_redwine, data_whitewine)
 total <- na.omit(total)
 ```
 

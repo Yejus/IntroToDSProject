@@ -2223,13 +2223,7 @@ rpart.plot(fit3, type=4, extra=1)
 ```{r}
 
 
-pred2 <- prediction(predict(fit2, type = "prob")[, 2], redwine_data$qual_above_med)
-plot(performance(pred2, "tpr", "fpr"))
-abline(0, 1, lty = 2)
-auc <- performance(pred, "auc")
-auc <- unlist(slot(auc,"y.values"))          
-auc
-
+ 
 ```
 
 

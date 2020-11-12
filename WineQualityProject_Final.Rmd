@@ -11,6 +11,9 @@ library(dplyr)
 library(e1071)
 library(caret)
 library(ROCR)
+library(tidyverse)
+library(tidyr)
+library(broom)
 
 ```
 
@@ -53,8 +56,8 @@ Can we predict with good accuracy the quality of wine for both the red and the w
 
 ```{r}
 data_allwine <- read.csv("~/projects/yalenus/IntroToDSProject/wine.csv")
-data_redwine <- read.csv("~/Desktop/YaleNUS/Y3S1/IntrotoDS/Assignments/DSProj_NaiveBayes/winequality-red.csv")
-data_whitewine <- read.csv("~/Desktop/YaleNUS/Y3S1/IntrotoDS/Assignments/DSProj_NaiveBayes/winequality-white.csv", sep=";")
+data_redwine <- read.csv("winequality-red.csv")
+data_whitewine <- read.csv("winequality-white.csv", sep=";")
 ```
 
 ### Exploratory Data Analysis (EDA)
@@ -83,13 +86,13 @@ Since the classifiers we are evaluating (Logistic Regression, Naive Bayes and De
 # citric.acid + residual.sugar + chlorides + free.sulfur.dioxide + sulphates + alcohol
 
 vars_red <- c("citric.acid", "residual.sugar", "chlorides", "free.sulfur.dioxide", "sulphates", "alcohol", "quality")
-data_redwine<- data_redwine[vars_red]
+data_redwine_reduced <- data_redwine[vars_red]
 
 # Retained variables for white
 # fixed.acidity + volatile.acidity + citric.acid + residual.sugar + chlorides + free.sulfur.dioxide + sulphates
 
 vars_white <- c("fixed.acidity", "volatile.acidity", "citric.acid", "residual.sugar", "chlorides", "free.sulfur.dioxide", "sulphates", "quality")
-data_whitewine <- data_whitewine[vars_white]
+data_whitewine_reduced <- data_whitewine[vars_white]
 
 
 ```
@@ -117,6 +120,25 @@ data_white_wine_labelled <- mutate(data_whitewine,
                                   quality > 6 ~ "good", 
                                   quality <= 6 ~ "bad"
                                 ))
+
+
+data_red_wine_labelled$label_binary <- as.numeric((data_red_wine_labelled$quality >6 ))
+data_white_wine_labelled$label_binary <- as.numeric((data_white_wine_labelled$quality >6 ))
+
+data_redwine_reduced_labelled <- mutate(data_redwine_reduced,
+       label = case_when(
+         quality > 6 ~ "good", 
+         quality <= 6 ~ "bad"
+       ))
+
+data_whitewine_reduced_labelled <- mutate(data_whitewine_reduced,
+                                label = case_when(
+                                  quality > 6 ~ "good", 
+                                  quality <= 6 ~ "bad"
+                                ))
+
+data_redwine_reduced_labelled$label_binary <- as.numeric((data_redwine_reduced_labelled$quality  >6 ))
+data_whitewine_reduced_labelled$label_binary <- as.numeric((data_whitewine_reduced_labelled$quality >6 ))
 
 ```
 
@@ -161,15 +183,16 @@ auc_allwine
 **White Wine**
 ``` {r}
 ### White Wine NB Analysis
-indxTrain_white <- createDataPartition(y = data_white_wine_labelled$label ,p = 0.8,list = FALSE)
-traindata_white <- data_white_wine_labelled[indxTrain_white, !(names(data_white_wine_labelled) %in% c('quality'))]
-testdata_white <- data_white_wine_labelled[-indxTrain_white, !(names(data_white_wine_labelled) %in% c('quality'))]
+set.seed(100000)
+indxTrain_white <- createDataPartition(y = data_whitewine_reduced_labelled$label ,p = 0.8,list = FALSE)
+traindata_white <- data_whitewine_reduced_labelled[indxTrain_white, !(names(data_whitewine_reduced_labelled) %in% c('quality'))]
+testdata_white <- data_whitewine_reduced_labelled[-indxTrain_white, !(names(data_whitewine_reduced_labelled) %in% c('quality'))]
 
 nb_model_white <- naiveBayes(as.factor(label) ~ . , traindata_white, laplace=.01)
 
 nb_prediction_white <- predict(nb_model_white,
                          # remove column "label"
-                         testdata_white[,!(names(data_white_wine_labelled) %in% c('label'))],
+                         testdata_white[,!(names(data_whitewine_reduced_labelled) %in% c('label', 'label_binary'))],
                          type='raw') 
 
 nb_score_white <- nb_prediction_white[, c("good")]
@@ -197,15 +220,16 @@ nb_auc_white
 **Red Wine**
 ``` {r}
 
-indxTrain <- createDataPartition(y = data_red_wine_labelled$label ,p = 0.8,list = FALSE) # uses random sampling
-traindata <- data_red_wine_labelled[indxTrain, !(names(data_red_wine_labelled) %in% c('quality'))]
-testdata <- data_red_wine_labelled[-indxTrain, !(names(data_red_wine_labelled) %in% c('quality'))]
+set.seed(100000)
+indxTrain <- createDataPartition(y = data_redwine_reduced_labelled$label ,p = 0.8,list = FALSE) # uses random sampling
+traindata <- data_redwine_reduced_labelled[indxTrain, !(names(data_redwine_reduced_labelled) %in% c('quality'))]
+testdata <- data_redwine_reduced_labelled[-indxTrain, !(names(data_redwine_reduced_labelled) %in% c('quality'))]
 
 nb_model_red <- naiveBayes(as.factor(label) ~ . , traindata, laplace=.01)
 
 nb_prediction_red <- predict(nb_model_red,
                          # remove column "label"
-                         testdata[,!(names(data_red_wine_labelled) %in% c('label'))],
+                         testdata[,!(names(data_redwine_reduced_labelled) %in% c('label','label_binary'))],
                          type='raw') 
 
 nb_score_red <- nb_prediction_red[, c("good")]
@@ -261,3 +285,586 @@ legend("topleft",
 print(paste0("AUC of NB Model (Red Wine):", nb_auc_red))
 print(paste0("AUC of NB Model (White Wine):", nb_auc_white))
 ```
+
+**Naive Bayes** 
+
+**Logistic Regression** 
+
+Aim: To predict whether the wine is above median quality or otherwise
+    - Hence the response variable would be the binary variable whether the wine is “good” or “bad”
+    
+How we chose the predictors:
+    - Full model with all the predictors
+            - Violates the assumption that variables have to be independent from one another
+            - Good for comparison
+    - Remove correlated variables for a reduced model as per EDA
+            - Fulfills all the assumptions
+            
+Split the data into training data and testing data into 80/20 percent of the dataset respectively.
+     - Model is created using training data
+     - ROC curve and AUC is derived using testing data
+     - Done to ensure overfitting does not happen
+     
+```{r}
+
+traindata_full <- data_red_wine_labelled[indxTrain, !(names(data_red_wine_labelled) %in% c('quality'))]
+testdata_full <- data_red_wine_labelled[-indxTrain, !(names(data_red_wine_labelled) %in% c('quality'))]
+
+traindata_white_full <- data_white_wine_labelled[indxTrain_white, !(names(data_white_wine_labelled) %in% c('quality'))]
+testdata_white_full <- data_white_wine_labelled[-indxTrain_white, !(names(data_white_wine_labelled) %in% c('quality'))]
+
+
+```
+
+**Red Wine** 
+
+**Full Model** 
+
+```{r}
+
+red_lr_train <- glm(formula = label_binary ~ 
+                fixed.acidity + volatile.acidity + citric.acid
+              + residual.sugar + chlorides + free.sulfur.dioxide
+              + total.sulfur.dioxide + density + pH 
+              + sulphates + alcohol, data = traindata_full,
+              family = binomial(link="logit"))
+
+summary(red_lr_train)
+
+pred = predict.glm(red_lr_train,testdata_full,  type="response")
+predObj <- prediction(pred, testdata_full$label_binary)
+rocObj = performance(predObj, measure="tpr", x.measure="fpr")
+aucObj = performance(predObj, measure="auc")
+plot(rocObj, main = paste("Area under the curve:",
+round(aucObj@y.values[[1]] ,4)))
+
+```
+
+**Reduced Model** 
+
+```{r}
+
+red_lr_train_reduced <- glm(formula = label_binary ~ 
+                 citric.acid
+              + residual.sugar + chlorides + free.sulfur.dioxide
+              + sulphates + alcohol, data = traindata,
+              family = binomial(link="logit"))
+
+summary(red_lr_train_reduced)
+
+pred = predict.glm(red_lr_train_reduced, testdata,  type="response")
+predObj <- prediction(pred, testdata$label_binary)
+rocObj = performance(predObj, measure="tpr", x.measure="fpr")
+aucObj = performance(predObj, measure="auc")
+plot(rocObj, main = paste("Area under the curve:",
+round(aucObj@y.values[[1]] ,4)))
+
+```
+
+```{r}
+
+# Select only numeric predictors
+mydata <- data_redwine_reduced_labelled %>%
+  dplyr::select_if(is.numeric) 
+predictors <- colnames(mydata)
+probabilities <- predict(red_lr_train_reduced, newdata = data_redwine_reduced_labelled ,type = "response")
+# Bind the logit and tidying the data for plot
+mydata <- mydata %>%
+  mutate(logit = log(probabilities/(1-probabilities))) %>%
+  gather(key = "predictors", value = "predictor.value", -logit)
+
+ggplot(mydata, aes(logit, predictor.value))+
+  geom_point(size = 0.5, alpha = 0.5) +
+  geom_smooth(method = "loess") + 
+  theme_bw() + 
+  facet_wrap(~predictors, scales = "free_y")
+
+
+```
+
+
+
+**White Wine** 
+
+**Full Model** 
+
+```{r}
+
+white_lr_train <- glm(formula = label_binary ~ 
+                fixed.acidity + volatile.acidity + citric.acid
+              + residual.sugar + chlorides + free.sulfur.dioxide
+              + total.sulfur.dioxide + density + pH 
+              + sulphates + alcohol, data = traindata_white_full,
+              family = binomial(link="logit"))
+
+
+pred = predict.glm(white_lr_train, testdata_white_full,  type="response")
+predObj <- prediction(pred, testdata_white_full$label_binary)
+rocObj = performance(predObj, measure="tpr", x.measure="fpr")
+aucObj = performance(predObj, measure="auc")
+plot(rocObj, main = paste("Area under the curve:",
+round(aucObj@y.values[[1]] ,4)))
+
+```
+
+**Reduced Model** 
+
+```{r}
+
+white_lr_train_reduced <- glm(formula = label_binary ~ 
+                fixed.acidity + volatile.acidity + citric.acid
+              + residual.sugar + chlorides + free.sulfur.dioxide
+              + sulphates, data = traindata_white,
+              family = binomial(link="logit"))
+
+
+pred = predict.glm(white_lr_train_reduced, testdata_white,  type="response")
+predObj <- prediction(pred, testdata_white$label_binary)
+rocObj = performance(predObj, measure="tpr", x.measure="fpr")
+aucObj = performance(predObj, measure="auc")
+plot(rocObj, main = paste("Area under the curve:",
+round(aucObj@y.values[[1]] ,4)))
+
+
+
+```
+
+
+```{r}
+
+# Select only numeric predictors
+mydata <- data_whitewine_reduced_labelled %>%
+  dplyr::select_if(is.numeric) 
+predictors <- colnames(mydata)
+probabilities <- predict(white_lr_train_reduced, newdata = data_whitewine_reduced_labelled ,type = "response")
+# Bind the logit and tidying the data for plot
+mydata <- mydata %>%
+  mutate(logit = log(probabilities/(1-probabilities))) %>%
+  gather(key = "predictors", value = "predictor.value", -logit)
+
+ggplot(mydata, aes(logit, predictor.value))+
+  geom_point(size = 0.5, alpha = 0.5) +
+  geom_smooth(method = "loess") + 
+  theme_bw() + 
+  facet_wrap(~predictors, scales = "free_y")
+
+
+```
+
+
+
+**Stepwise Regression** 
+
+We use stepwise regression using logistic regression focusing on p-values in order to determine the significant variables that affect the quality of wine (using quality above median as the binary response variable)
+
+Since we use logistic regression using stepwise regression, we must make sure that variables are independent from one another, i.e none of the variables are heavily correlated with each other, so we use the reduced predictor set as explained in our EDA.
+
+We want the most significant variables, so the p-value threshold is set at 0.001.
+Both backward elimination and forward selection are considered.
+
+
+**Red Wine**
+
+data_redwine_reduced_labelled
+
+**Back Elimination**
+
+```{r}
+
+red_new_lr <- glm(formula = data_redwine_reduced_labelled$label_binary ~ 
+               data_redwine_reduced_labelled$citric.acid
+              + data_redwine_reduced_labelled$residual.sugar + data_redwine_reduced_labelled$chlorides + data_redwine_reduced_labelled$free.sulfur.dioxide
+              + data_redwine_reduced_labelled$sulphates + data_redwine_reduced_labelled$alcohol,
+              family = binomial(link="logit"))
+
+summary(red_new_lr)
+
+```
+
+As we can see residual.sugar has the highest p-val of 0.630051, so we remove it.
+
+```{r}
+
+red_new_lr_2 <- glm(formula = data_redwine_reduced_labelled$label_binary ~ 
+               data_redwine_reduced_labelled$citric.acid + data_redwine_reduced_labelled$chlorides + data_redwine_reduced_labelled$free.sulfur.dioxide
+              + data_redwine_reduced_labelled$sulphates + data_redwine_reduced_labelled$alcohol,
+              family = binomial(link="logit"))
+
+summary(red_new_lr_2)
+
+```
+
+As we can see free.sulfur.dioxide has the highest p-val of 0.026230, so we remove it.
+
+```{r}
+
+red_new_lr_3 <- glm(formula = data_redwine_reduced_labelled$label_binary ~ 
+               data_redwine_reduced_labelled$citric.acid + data_redwine_reduced_labelled$chlorides
+              + data_redwine_reduced_labelled$sulphates + data_redwine_reduced_labelled$alcohol,
+              family = binomial(link="logit"))
+
+summary(red_new_lr_3)
+
+```
+
+None of the variables have a p-value lower than 0.001, so we stop here.
+
+Significant variables:
+ - citric.acid
+ - chlorides
+ - sulphates
+ - alcohol
+
+**Forward Selection **
+
+
+```{r}
+
+red_lr_new_fs1_1 <- glm(formula = data_redwine_reduced_labelled$label_binary ~ data_redwine_reduced_labelled$citric.acid,
+              family = binomial(link="logit"))
+
+red_lr_new_fs1_2 <- glm(formula = data_redwine_reduced_labelled$label_binary ~ data_redwine_reduced_labelled$residual.sugar,
+              family = binomial(link="logit"))
+
+red_lr_new_fs1_3 <- glm(formula = data_redwine_reduced_labelled$label_binary ~ data_redwine_reduced_labelled$chlorides,
+              family = binomial(link="logit"))
+
+red_lr_new_fs1_4 <- glm(formula = data_redwine_reduced_labelled$label_binary ~ data_redwine_reduced_labelled$free.sulfur.dioxide,
+              family = binomial(link="logit"))
+
+red_lr_new_fs1_5 <- glm(formula = data_redwine_reduced_labelled$label_binary ~ data_redwine_reduced_labelled$sulphates,
+              family = binomial(link="logit"))
+
+red_lr_new_fs1_6 <- glm(formula = data_redwine_reduced_labelled$label_binary ~ data_redwine_reduced_labelled$alcohol,
+              family = binomial(link="logit"))
+
+summary(red_lr_new_fs1_1)$coef
+summary(red_lr_new_fs1_2)$coef
+summary(red_lr_new_fs1_3)$coef
+summary(red_lr_new_fs1_4)$coef
+summary(red_lr_new_fs1_5)$coef
+summary(red_lr_new_fs1_6)$coef
+
+
+```
+
+As we can see alcohol has the lowest p-val of 9.756085e-45, so we include it.
+
+```{r}
+
+red_lr_new_fs2_1 <- glm(formula = data_redwine_reduced_labelled$label_binary ~ data_redwine_reduced_labelled$alcohol + data_redwine_reduced_labelled$citric.acid,
+              family = binomial(link="logit"))
+
+red_lr_new_fs2_2 <- glm(formula = data_redwine_reduced_labelled$label_binary ~ data_redwine_reduced_labelled$alcohol + data_redwine_reduced_labelled$residual.sugar,
+              family = binomial(link="logit"))
+
+red_lr_new_fs2_3 <- glm(formula = data_redwine_reduced_labelled$label_binary ~ data_redwine_reduced_labelled$alcohol + data_redwine_reduced_labelled$chlorides,
+              family = binomial(link="logit"))
+
+red_lr_new_fs2_4 <- glm(formula = data_redwine_reduced_labelled$label_binary ~ data_redwine_reduced_labelled$alcohol + data_redwine_reduced_labelled$free.sulfur.dioxide,
+              family = binomial(link="logit"))
+
+red_lr_new_fs2_5 <- glm(formula = data_redwine_reduced_labelled$label_binary ~ data_redwine_reduced_labelled$alcohol + data_redwine_reduced_labelled$sulphates,
+              family = binomial(link="logit"))
+
+summary(red_lr_new_fs2_1)$coef
+summary(red_lr_new_fs2_2)$coef
+summary(red_lr_new_fs2_3)$coef
+summary(red_lr_new_fs2_4)$coef
+summary(red_lr_new_fs2_5)$coef
+
+
+```
+
+As we can see sulphates has the lowest p-val of 1.598385e-13, so we include it.
+
+```{r}
+
+red_lr_new_fs3_1 <- glm(formula = data_redwine_reduced_labelled$label_binary ~ data_redwine_reduced_labelled$alcohol + data_redwine_reduced_labelled$sulphates +  data_redwine_reduced_labelled$citric.acid,
+              family = binomial(link="logit"))
+
+red_lr_new_fs3_2 <- glm(formula = data_redwine_reduced_labelled$label_binary ~ data_redwine_reduced_labelled$alcohol + data_redwine_reduced_labelled$sulphates +  data_redwine_reduced_labelled$residual.sugar,
+              family = binomial(link="logit"))
+
+red_lr_new_fs3_3 <- glm(formula = data_redwine_reduced_labelled$label_binary ~ data_redwine_reduced_labelled$alcohol + data_redwine_reduced_labelled$sulphates +  data_redwine_reduced_labelled$chlorides,
+              family = binomial(link="logit"))
+
+red_lr_new_fs3_4 <- glm(formula = data_redwine_reduced_labelled$label_binary ~ data_redwine_reduced_labelled$alcohol + data_redwine_reduced_labelled$sulphates +  data_redwine_reduced_labelled$free.sulfur.dioxide,
+              family = binomial(link="logit"))
+
+
+summary(red_lr_new_fs3_1)$coef
+summary(red_lr_new_fs3_2)$coef
+summary(red_lr_new_fs3_3)$coef
+summary(red_lr_new_fs3_4)$coef
+
+
+```
+
+As we can see citric.acid has the lowest p-val of 3.853376e-08, so we include it.
+
+```{r}
+
+
+red_lr_new_fs4_1 <- glm(formula = data_redwine_reduced_labelled$label_binary ~ data_redwine_reduced_labelled$alcohol + data_redwine_reduced_labelled$sulphates + data_redwine_reduced_labelled$citric.acid +  data_redwine_reduced_labelled$residual.sugar,
+              family = binomial(link="logit"))
+
+red_lr_new_fs4_2 <- glm(formula = data_redwine_reduced_labelled$label_binary ~ data_redwine_reduced_labelled$alcohol + data_redwine_reduced_labelled$sulphates + data_redwine_reduced_labelled$citric.acid +  data_redwine_reduced_labelled$chlorides,
+              family = binomial(link="logit"))
+
+red_lr_new_fs4_3 <- glm(formula = data_redwine_reduced_labelled$label_binary ~ data_redwine_reduced_labelled$alcohol + data_redwine_reduced_labelled$sulphates + data_redwine_reduced_labelled$citric.acid +  data_redwine_reduced_labelled$free.sulfur.dioxide,
+              family = binomial(link="logit"))
+
+
+summary(red_lr_new_fs4_1)$coef
+summary(red_lr_new_fs4_2)$coef
+summary(red_lr_new_fs4_3)$coef
+
+
+```
+
+As we can see chlorides has the lowest p-val of 6.075525e-04, so we include it.
+
+
+```{r}
+
+
+red_lr_new_fs5_1 <- glm(formula = data_redwine_reduced_labelled$label_binary ~ data_redwine_reduced_labelled$alcohol + data_redwine_reduced_labelled$sulphates + data_redwine_reduced_labelled$citric.acid + data_redwine_reduced_labelled$chlorides +  data_redwine_reduced_labelled$residual.sugar,
+              family = binomial(link="logit"))
+
+red_lr_new_fs5_2 <- glm(formula = data_redwine_reduced_labelled$label_binary ~ data_redwine_reduced_labelled$alcohol + data_redwine_reduced_labelled$sulphates + data_redwine_reduced_labelled$citric.acid + data_redwine_reduced_labelled$chlorides +  data_redwine_reduced_labelled$free.sulfur.dioxide,
+              family = binomial(link="logit"))
+
+
+summary(red_lr_new_fs5_1)$coef
+summary(red_lr_new_fs5_2)$coef
+
+
+```
+
+As we can see, none of the variables have a p-value lower than 0.001, so we stop here.
+
+Significant variables:
+ - citric.acid
+ - chlorides
+ - sulphates
+ - alcohol
+
+**White Wine**
+
+
+```{r}
+
+white_lr_new_1 <- glm(formula = data_whitewine_reduced_labelled$label_binary ~ 
+                data_whitewine_reduced_labelled$fixed.acidity + data_whitewine_reduced_labelled$volatile.acidity +
+                  data_whitewine_reduced_labelled$citric.acid + data_whitewine_reduced_labelled$residual.sugar + data_whitewine_reduced_labelled$chlorides +
+                  data_whitewine_reduced_labelled$free.sulfur.dioxide +  data_whitewine_reduced_labelled$sulphates,
+              family = binomial(link="logit"))
+
+summary(white_lr_new_1)
+
+```
+
+As we can see citric.acid has the highest p-val of 0.401049, so we remove it.
+
+```{r}
+
+white_lr_new_2 <- glm(formula = data_whitewine_reduced_labelled$label_binary ~ 
+                data_whitewine_reduced_labelled$fixed.acidity + data_whitewine_reduced_labelled$volatile.acidity +
+                   data_whitewine_reduced_labelled$residual.sugar + data_whitewine_reduced_labelled$chlorides +
+                  data_whitewine_reduced_labelled$free.sulfur.dioxide +  data_whitewine_reduced_labelled$sulphates,
+              family = binomial(link="logit"))
+
+summary(white_lr_new_2)
+
+```
+
+As we can see free.sulfur.dioxide has the highest p-val of 0.105479, so we remove it.
+
+```{r}
+
+white_lr_new_3 <- glm(formula = data_whitewine_reduced_labelled$label_binary ~ 
+                data_whitewine_reduced_labelled$fixed.acidity + data_whitewine_reduced_labelled$volatile.acidity +
+                   data_whitewine_reduced_labelled$residual.sugar + data_whitewine_reduced_labelled$chlorides +  data_whitewine_reduced_labelled$sulphates,
+              family = binomial(link="logit"))
+
+summary(white_lr_new_3)
+
+```
+
+None of the variables have a p-value lower than 0.001, so we stop here.
+
+Significant variables:
+ - fixed.acidity 
+ - volatile.acidity
+ - residual.sugar 
+ - chlorides
+ - sulphates 
+
+**Forward Selection**
+
+```{r}
+
+white_lr_new_fs1_1 <- glm(formula = data_whitewine_reduced_labelled$label_binary ~ data_whitewine_reduced_labelled$fixed.acidity,
+              family = binomial(link="logit"))
+
+white_lr_new_fs1_2 <- glm(formula = data_whitewine_reduced_labelled$label_binary ~ data_whitewine_reduced_labelled$volatile.acidity,
+              family = binomial(link="logit"))
+
+white_lr_new_fs1_3 <- glm(formula = data_whitewine_reduced_labelled$label_binary ~ data_whitewine_reduced_labelled$citric.acid,
+              family = binomial(link="logit"))
+
+white_lr_new_fs1_4 <- glm(formula = data_whitewine_reduced_labelled$label_binary ~ data_whitewine_reduced_labelled$residual.sugar,
+              family = binomial(link="logit"))
+
+white_lr_new_fs1_5 <- glm(formula = data_whitewine_reduced_labelled$label_binary ~ data_whitewine_reduced_labelled$chlorides,
+              family = binomial(link="logit"))
+
+white_lr_new_fs1_6 <- glm(formula = data_whitewine_reduced_labelled$label_binary ~ data_whitewine_reduced_labelled$free.sulfur.dioxide,
+              family = binomial(link="logit"))
+
+white_lr_new_fs1_7 <- glm(formula = data_whitewine_reduced_labelled$label_binary ~ data_whitewine_reduced_labelled$sulphates,
+              family = binomial(link="logit"))
+
+summary(white_lr_new_fs1_1)$coef
+summary(white_lr_new_fs1_2)$coef
+summary(white_lr_new_fs1_3)$coef
+summary(white_lr_new_fs1_4)$coef
+summary(white_lr_new_fs1_5)$coef
+summary(white_lr_new_fs1_6)$coef
+summary(white_lr_new_fs1_7)$coef
+```
+
+As we can see  chlorides has the lowest p-val of 6.967899e-57, so we include it.
+
+```{r}
+
+white_lr_new_fs2_1 <- glm(formula = data_whitewine_reduced_labelled$label_binary ~ data_whitewine_reduced_labelled$chlorides + data_whitewine_reduced_labelled$fixed.acidity,
+              family = binomial(link="logit"))
+
+white_lr_new_fs2_2 <- glm(formula = data_whitewine_reduced_labelled$label_binary ~ data_whitewine_reduced_labelled$chlorides + data_whitewine_reduced_labelled$volatile.acidity,
+              family = binomial(link="logit"))
+
+white_lr_new_fs2_3 <- glm(formula = data_whitewine_reduced_labelled$label_binary ~ data_whitewine_reduced_labelled$chlorides + data_whitewine_reduced_labelled$citric.acid,
+              family = binomial(link="logit"))
+
+white_lr_new_fs2_4 <- glm(formula = data_whitewine_reduced_labelled$label_binary ~ data_whitewine_reduced_labelled$chlorides + data_whitewine_reduced_labelled$residual.sugar,
+              family = binomial(link="logit"))
+
+white_lr_new_fs2_5 <- glm(formula = data_whitewine_reduced_labelled$label_binary ~ data_whitewine_reduced_labelled$chlorides + data_whitewine_reduced_labelled$free.sulfur.dioxide,
+              family = binomial(link="logit"))
+
+white_lr_new_fs2_6 <- glm(formula = data_whitewine_reduced_labelled$label_binary ~ data_whitewine_reduced_labelled$chlorides +  data_whitewine_reduced_labelled$sulphates,
+              family = binomial(link="logit"))
+
+summary(white_lr_new_fs2_1)$coef
+summary(white_lr_new_fs2_2)$coef
+summary(white_lr_new_fs2_3)$coef
+summary(white_lr_new_fs2_4)$coef
+summary(white_lr_new_fs2_5)$coef
+summary(white_lr_new_fs2_6)$coef
+
+```
+
+As we can see volatile.acidity has the lowest p-val of 1.443031e-06, so we include it.
+
+```{r}
+
+white_lr_new_fs3_1 <- glm(formula = data_whitewine_reduced_labelled$label_binary ~ data_whitewine_reduced_labelled$chlorides + data_whitewine_reduced_labelled$volatile.acidity +  data_whitewine_reduced_labelled$fixed.acidity,
+              family = binomial(link="logit"))
+
+white_lr_new_fs3_2 <- glm(formula = data_whitewine_reduced_labelled$label_binary ~ data_whitewine_reduced_labelled$chlorides + data_whitewine_reduced_labelled$volatile.acidity +  data_whitewine_reduced_labelled$citric.acid,
+              family = binomial(link="logit"))
+
+white_lr_new_fs3_3 <- glm(formula = data_whitewine_reduced_labelled$label_binary ~ data_whitewine_reduced_labelled$chlorides + data_whitewine_reduced_labelled$volatile.acidity +  data_whitewine_reduced_labelled$residual.sugar,
+              family = binomial(link="logit"))
+
+white_lr_new_fs3_4 <- glm(formula = data_whitewine_reduced_labelled$label_binary ~ data_whitewine_reduced_labelled$chlorides + data_whitewine_reduced_labelled$volatile.acidity +  data_whitewine_reduced_labelled$free.sulfur.dioxide,
+              family = binomial(link="logit"))
+
+white_lr_new_fs3_5 <- glm(formula = data_whitewine_reduced_labelled$label_binary ~ data_whitewine_reduced_labelled$chlorides +data_whitewine_reduced_labelled$volatile.acidity + data_whitewine_reduced_labelled$sulphates,
+              family = binomial(link="logit"))
+
+summary(white_lr_new_fs3_1)$coef
+summary(white_lr_new_fs3_2)$coef
+summary(white_lr_new_fs3_3)$coef
+summary(white_lr_new_fs3_4)$coef
+summary(white_lr_new_fs3_5)$coef
+
+```
+
+As we can see fixed.acidity has the lowest p-val of 7.237755e-06, so we include it.
+
+```{r}
+
+white_lr_new_fs4_1 <- glm(formula = data_whitewine_reduced_labelled$label_binary ~ data_whitewine_reduced_labelled$chlorides + data_whitewine_reduced_labelled$volatile.acidity + data_whitewine_reduced_labelled$fixed.acidity +   data_whitewine_reduced_labelled$citric.acid,
+              family = binomial(link="logit"))
+
+white_lr_new_fs4_2 <- glm(formula = data_whitewine_reduced_labelled$label_binary ~ data_whitewine_reduced_labelled$chlorides + data_whitewine_reduced_labelled$volatile.acidity + data_whitewine_reduced_labelled$fixed.acidity +  data_whitewine_reduced_labelled$residual.sugar,
+              family = binomial(link="logit"))
+
+white_lr_new_fs4_3 <- glm(formula = data_whitewine_reduced_labelled$label_binary ~ data_whitewine_reduced_labelled$chlorides + data_whitewine_reduced_labelled$volatile.acidity + data_whitewine_reduced_labelled$fixed.acidity + data_whitewine_reduced_labelled$free.sulfur.dioxide,
+              family = binomial(link="logit"))
+
+white_lr_new_fs4_4 <- glm(formula = data_whitewine_reduced_labelled$label_binary ~ data_whitewine_reduced_labelled$chlorides +data_whitewine_reduced_labelled$volatile.acidity + data_whitewine_reduced_labelled$fixed.acidity +  data_whitewine_reduced_labelled$sulphates,
+              family = binomial(link="logit"))
+
+summary(white_lr_new_fs4_1)$coef
+summary(white_lr_new_fs4_2)$coef
+summary(white_lr_new_fs4_3)$coef
+summary(white_lr_new_fs4_4)$coef
+
+```
+
+As we can see sulphates has the lowest p-val of 5.265491e-05, so we include it.
+
+
+```{r}
+
+white_lr_new_fs5_1 <- glm(formula = data_whitewine_reduced_labelled$label_binary ~ data_whitewine_reduced_labelled$chlorides + data_whitewine_reduced_labelled$volatile.acidity + data_whitewine_reduced_labelled$fixed.acidity +  data_whitewine_reduced_labelled$sulphates +   data_whitewine_reduced_labelled$citric.acid,
+              family = binomial(link="logit"))
+
+white_lr_new_fs5_2 <- glm(formula = data_whitewine_reduced_labelled$label_binary ~ data_whitewine_reduced_labelled$chlorides + data_whitewine_reduced_labelled$volatile.acidity + data_whitewine_reduced_labelled$fixed.acidity +  data_whitewine_reduced_labelled$sulphates +  data_whitewine_reduced_labelled$residual.sugar,
+              family = binomial(link="logit"))
+
+white_lr_new_fs5_3 <- glm(formula = data_whitewine_reduced_labelled$label_binary ~ data_whitewine_reduced_labelled$chlorides + data_whitewine_reduced_labelled$volatile.acidity + data_whitewine_reduced_labelled$fixed.acidity +  data_whitewine_reduced_labelled$sulphates +  data_whitewine_reduced_labelled$free.sulfur.dioxide,
+              family = binomial(link="logit"))
+
+summary(white_lr_new_fs5_1)$coef
+summary(white_lr_new_fs5_2)$coef
+summary(white_lr_new_fs5_3)$coef
+
+```
+
+As we can see residual.sugar has the lowest p-val of 3.793700e-04, so we include it.
+
+
+```{r}
+
+white_lr_new_fs6_1 <- glm(formula = data_whitewine_reduced_labelled$label_binary ~ data_whitewine_reduced_labelled$chlorides + data_whitewine_reduced_labelled$volatile.acidity + data_whitewine_reduced_labelled$fixed.acidity +  data_whitewine_reduced_labelled$sulphates + data_whitewine_reduced_labelled$residual.sugar +  data_whitewine_reduced_labelled$citric.acid,
+              family = binomial(link="logit"))
+
+white_lr_new_fs6_2 <- glm(formula = data_whitewine_reduced_labelled$label_binary ~ data_whitewine_reduced_labelled$chlorides + data_whitewine_reduced_labelled$volatile.acidity + data_whitewine_reduced_labelled$fixed.acidity +  data_whitewine_reduced_labelled$sulphates + data_whitewine_reduced_labelled$residual.sugar +  data_whitewine_reduced_labelled$free.sulfur.dioxide,
+              family = binomial(link="logit"))
+
+summary(white_lr_new_fs6_1)$coef
+summary(white_lr_new_fs6_2)$coef
+
+```
+
+None of the variables have a p-value lower than 0.001, so we stop here.
+
+Significant variables:
+ - chlorides
+ - volatile.acidity
+ - fixed.acidity 
+ - sulphates
+ - residual.sugar
+
+
+
+
+
+
+
+

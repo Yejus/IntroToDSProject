@@ -16,7 +16,15 @@ library(tidyr)
 library(broom)
 library(rpart)
 library(rpart.plot)
-
+library(plyr)
+library(ggplot2)
+library(cluster)
+library(lattice)
+library(graphics)
+library(grid)
+library(gridExtra)
+library(gplots)
+library(PerformanceAnalytics)
 ```
 
 ### Introduction 
@@ -69,24 +77,137 @@ data_whitewine <- read.csv("winequality-white.csv")
 
 ### Exploratory Data Analysis (EDA)
 
-**Boxplots of each variable by type of wine (red/white)**  
+First, we need to see if the red and the white wine data are significantly differnt from 
+each other. To this end, we utilize two methods: k-means clustering and Principal Means Analysis (PCA)
+
+Before that, we temporarily label the data as red or wine by adding an additional column to the datasets. 
 
 ```{r}
+red$label <- rep("red", nrow(data_redwine))
+white$label <- rep("white", nrow(data_whitewine))
 
-# box-and-whiskers plot for each variable by type
-par(mfrow=c(2,3))
+total = data_allwine
 
-for(i in 1:11){
-  boxplot(data_allwine[,i] ~data_allwine$type, ylab = names(data_allwine)[i])
-}
+total <- rbind(red, white)
+total <- na.omit(total)
 ```
+
+
+**Using k-means clustering to attempt to classify the total wine dataset**
+
+```{r}
+kmdata <- as.matrix(total[c("fixed.acidity", "volatile.acidity", "citric.acid", 
+"residual.sugar", "chlorides", "free.sulfur.dioxide", "total.sulfur.dioxide", "density",
+"pH", "sulphates", "alcohol")])
+
+km <- kmeans(kmdata, 2, nstart = 25)
+```
+```
+Because the dataset has 11 predictors, there are $^11C_2 = 55$ ways to plot pairs of predictors on a 2D-plane. 
+We only select a few to plot below: 
+
+```{r}
+df = as.data.frame(kmdata)
+df$cluster = factor(km$cluster)
+centers = as.data.frame(km$centers)
+
+g1 <- ggplot(data = df, aes(x = fixed.acidity, y = volatile.acidity, color = cluster)) + 
+geom_point() + theme(legend.position = "right") + 
+geom_point(data = centers, aes(x = fixed.acidity, y = volatile.acidity, color = as.factor(c(1,2))), size = 10, alpha = 0.3, show.legend = FALSE)
+
+g2 <- ggplot(data = df, aes(x = citric.acid, y = residual.sugar, color = cluster)) + 
+geom_point() + theme(legend.position = "right") + 
+geom_point(data = centers, aes(x = citric.acid, y = residual.sugar, color = as.factor(c(1,2))), size = 10, alpha = 0.3, show.legend = FALSE)
+
+g3 <- ggplot(data = df, aes(x = chlorides, y = free.sulfur.dioxide, color = cluster)) + 
+geom_point() + theme(legend.position = "right") + 
+geom_point(data = centers, aes(x = chlorides, y = free.sulfur.dioxide, color = as.factor(c(1,2))), size = 10, alpha = 0.3, show.legend = FALSE)
+
+g4 <- ggplot(data = df, aes(x = total.sulfur.dioxide, y = density, color = cluster)) + 
+geom_point() + theme(legend.position = "right") + 
+geom_point(data = centers, aes(x = total.sulfur.dioxide, y = density, color = as.factor(c(1,2))), size = 10, alpha = 0.3, show.legend = FALSE)
+
+g5 <- ggplot(data = df, aes(x = pH, y = sulphates, color = cluster)) + 
+geom_point() + theme(legend.position = "right") + 
+geom_point(data = centers, aes(x = pH, y = sulphates, color = as.factor(c(1,2))), size = 10, alpha = 0.3, show.legend = FALSE)
+
+grid.arrange(g1, g2, g3, g4, g5, nrow = 5)
+```
+
+We see that several of the plots don't do a good job of separating the red and the white wines. In fact, only one of the above plots -- density vs. total sulfur dioxide -- shows 
+some distinction between the two kinds of wine. We need a different method.
+
+**Using Principal Components Analysis (PCA) for clustering the two wines**
+
+We run a PCA on the combined dataset as follows:
+
+```{r}
+pca_total <- prcomp(total[,c(1:11)], scale. = TRUE, center = TRUE)
+
+ggbiplot(pca_total, obs.scale = 1, var.scale = 1, groups = total$label, ellipse = TRUE) +
+scale_color_discrete(name = '') +
+theme(legend.direction = 'horizontal', legend.position = 'top')
+```
+
+PC1 vs. PC3: 
+
+```{r}
+ggbiplot(pca_total, obs.scale = 1, var.scale = 1, choices = c(1,3), groups = total$label, ellipse = TRUE) +
+scale_color_discrete(name = '') +
+theme(legend.direction = 'horizontal', legend.position = 'top')
+
+```
+
+PC1 vs. PC4:
+
+```{r}
+ggbiplot(pca_total, obs.scale = 1, var.scale = 1, choices = c(1,4), groups = total$label, ellipse = TRUE) +
+scale_color_discrete(name = '') +
+theme(legend.direction = 'horizontal', legend.position = 'top')
+```
+
+As we can see, several of the Principal Components do a decent job of separating out the red wines and the white wines. This motivates us to analyze each type of wine 
+separately for the rest of our project. 
+
 
 **Exploring Correlation Between Variables** 
 
-TO ADD: exploration on correlation between variables + explanation on approach of dropping of variables (textbook)
+Correlated predictors are the bane of data analysis. Most of our classification methods require that the predictors in the model be as uncorrelated as possible. 
+To that end, we use the strategy of removing one predictor variable from every pair of highly correlated variables in the dataset. 
+
+```{r}
+corr_red <- cor(data_redwine[,c(1:11)])
+corr_white <- cor(data_whitewine[, c(1:11)])
+```
+
+Correlation graphs/Heat-maps of the predictors for the Red wine dataset: 
+
+```{r}
+library('gplots')
+library('PerformanceAnalytics')
+red_map <- heatmap.2(x = corr_red, col = rev(heat.colors(16)), symm = TRUE, dendrogram = 'none', 
+trace = 'none', main = "Correlation Matrix for Red Wines", key = TRUE,
+ lmat=rbind( c(0, 3), c(2,1), c(0,4) ), lhei=c(1.5,4,1.5), lwid = c(0.5,3), srtRow = 10, srtCol = 20, symkey = TRUE, key.title = NA,
+ tracecol = 'blue')
+chart.Correlation(corr_red, histogram = TRUE, pch = 1)
+```
+
+And for White wines:
+```{r}
+white_map <- heatmap.2(x = corr_white, col = rev(heat.colors(16)), symm = TRUE, dendrogram = 'none', 
+trace = 'none', main = "Correlation Matrix for White Wines", key = TRUE,
+ lmat=rbind( c(0, 3), c(2,1), c(0,4) ), lhei=c(1.5,4,1.5), lwid = c(0.5,3), srtRow = 10, srtCol = 20, symkey = TRUE, key.title = NA,
+ tracecol = 'blue')
+chart.Correlation(corr_white, histogram = TRUE, pch = 1)
+```
+
+Some predictors are highly correlated in both datasets (>50%). Moreover, some of them are not the same pairs 
+across both datasets. We use the strategy described above and remove the correlated variables that have a single red asterisk (*) or more in the 
+correlation charts above. 
 
 
-Since the classifiers we are evaluating (Logistic Regression, Naive Bayes and Decision Trees) do not handle correlated features well, we can directly work with only the variables we have chose to keep in our dataset:
+This leads us to a filtered set of less correlated predictors to use for the rest of our analyses: 
+
 
 ```{r}
 # Retained variables for red 
@@ -102,6 +223,32 @@ vars_white <- c("fixed.acidity", "volatile.acidity", "citric.acid", "residual.su
 data_whitewine_reduced <- data_whitewine[vars_white]
 ```
 
+
+**The new correlation heatmaps**
+
+First let's create a correlation matrix
+
+```{r}
+corr_red_new <- cor(data_redwine_reduced)
+corr_white_new <- cor(data_whitewine_reduced)
+```
+
+The new correlation heat map for red wines: 
+```{r}
+red_map_new <- heatmap.2(x = corr_red_new, col = rev(heat.colors(16)), symm = TRUE, dendrogram = 'none', 
+trace = 'none', main = "Correlation Matrix for Red Wines (New)", key = TRUE,
+ lmat=rbind( c(0, 3), c(2,1), c(0,4) ), lhei=c(1.5,4,1.5), lwid = c(0.5,3), srtRow = 10, srtCol = 20, symkey = TRUE, key.title = NA,
+ tracecol = 'blue')
+```
+
+Similarly for white wines: 
+
+```{r}
+white_map_new <- heatmap.2(x = corr_white_new, col = rev(heat.colors(16)), symm = TRUE, dendrogram = 'none', 
+trace = 'none', main = "Correlation Matrix for White Wines (New)", key = TRUE,
+ lmat=rbind( c(0, 3), c(2,1), c(0,4) ), lhei=c(1.5,4,1.5), lwid = c(0.5,3), srtRow = 10, srtCol = 20, symkey = TRUE, key.title = NA,
+ tracecol = 'blue')
+```
 
 ### Building Predictors 
 

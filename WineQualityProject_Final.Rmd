@@ -138,11 +138,11 @@ data_whitewine_reduced_labelled <- mutate(data_whitewine_reduced,
                                 ))
 
 
-# data_red_wine_labelled$label_binary <- as.numeric((data_red_wine_labelled$quality >6 ))
-# data_white_wine_labelled$label_binary <- as.numeric((data_white_wine_labelled$quality >6 ))
+data_red_wine_labelled$label_binary <- as.numeric((data_red_wine_labelled$quality >6 ))
+data_white_wine_labelled$label_binary <- as.numeric((data_white_wine_labelled$quality >6 ))
 
-# data_redwine_reduced_labelled$label_binary <- as.numeric((data_redwine_reduced_labelled$quality  >6 ))
-# data_whitewine_reduced_labelled$label_binary <- as.numeric((data_whitewine_reduced_labelled$quality >6 ))
+data_redwine_reduced_labelled$label_binary <- as.numeric((data_redwine_reduced_labelled$quality  >6 ))
+data_whitewine_reduced_labelled$label_binary <- as.numeric((data_whitewine_reduced_labelled$quality >6 ))
 
 ```
 
@@ -186,7 +186,7 @@ testdata_white_reduced <- data_whitewine_reduced_labelled[-indxTrain_white_reduc
 ``` {r}
 ### White Wine NB Analysis
 
-nb_model_white <- naiveBayes(as.factor(label) ~ . , traindata_white_full, laplace=.01)
+nb_model_white <- naiveBayes(as.factor(label) ~ . - label_binary , traindata_white_full, laplace=.01)
 
 nb_prediction_white <- predict(nb_model_white,
                          # remove column "label"
@@ -198,6 +198,7 @@ nb_score_white <- nb_prediction_white[, c("good")]
 actual_class_white <- testdata_white_full$label == 'good' 
 nb_pred_white <- prediction(nb_score_white, actual_class_white)
 nb_perf_white <- performance(nb_pred_white, "tpr", "fpr")
+
 
 ```
 
@@ -220,7 +221,7 @@ nb_auc_white
 
 
 
-nb_model_red <- naiveBayes(as.factor(label) ~ . , traindata_red_full, laplace=.01)
+nb_model_red <- naiveBayes(as.factor(label) ~ . - label_binary, traindata_red_full, laplace=.01)
 
 nb_prediction_red <- predict(nb_model_red,
                          # remove column "label"
@@ -299,23 +300,6 @@ Split the data into training data and testing data into 80/20 percent of the dat
      - Model is created using training data
      - ROC curve and AUC is derived using testing data
      - Done to ensure overfitting does not happen
-     
-```{r}
-
-data_red_wine_labelled$label_binary <- as.numeric((data_red_wine_labelled$quality >6 ))
-data_white_wine_labelled$label_binary <- as.numeric((data_white_wine_labelled$quality >6 ))
-
-data_redwine_reduced_labelled$label_binary <- as.numeric((data_redwine_reduced_labelled$quality  >6 ))
-data_whitewine_reduced_labelled$label_binary <- as.numeric((data_whitewine_reduced_labelled$quality >6 ))
-
-traindata_full <- data_red_wine_labelled[indxTrain_red_full, !(names(data_red_wine_labelled) %in% c('quality'))]
-testdata_full <- data_red_wine_labelled[-indxTrain_red_full, !(names(data_red_wine_labelled) %in% c('quality'))]
-
-traindata_white_full <- data_white_wine_labelled[indxTrain_white_full, !(names(data_white_wine_labelled) %in% c('quality'))]
-testdata_white_full <- data_white_wine_labelled[-indxTrain_white_full, !(names(data_white_wine_labelled) %in% c('quality'))]
-
-traindata_full
-```
 
 **Red Wine** 
 
@@ -329,13 +313,13 @@ red_lr_train <- glm(formula = label_binary ~
                 fixed.acidity + volatile.acidity + citric.acid
               + residual.sugar + chlorides + free.sulfur.dioxide
               + total.sulfur.dioxide + density + pH 
-              + sulphates + alcohol, data = traindata_full,
+              + sulphates + alcohol, data = traindata_red_full,
               family = binomial(link="logit"))
 
 summary(red_lr_train)
 
-pred = predict.glm(red_lr_train,testdata_full,  type="response")
-predObj <- prediction(pred, testdata_full$label_binary)
+pred = predict.glm(red_lr_train,testdata_red_full,  type="response")
+predObj <- prediction(pred, testdata_red_full$label_binary)
 rocObj = performance(predObj, measure="tpr", x.measure="fpr")
 aucObj = performance(predObj, measure="auc")
 plot(rocObj, main = paste("Area under the curve:",
@@ -350,13 +334,13 @@ round(aucObj@y.values[[1]] ,4)))
 red_lr_train_reduced <- glm(formula = label_binary ~ 
                  citric.acid
               + residual.sugar + chlorides + free.sulfur.dioxide
-              + sulphates + alcohol, data = traindata,
+              + sulphates + alcohol, data = traindata_red_reduced,
               family = binomial(link="logit"))
 
 summary(red_lr_train_reduced)
 
-pred = predict.glm(red_lr_train_reduced, testdata,  type="response")
-predObj <- prediction(pred, testdata$label_binary)
+pred = predict.glm(red_lr_train_reduced, testdata_red_reduced,  type="response")
+predObj <- prediction(pred, testdata_red_reduced$label_binary)
 rocObj = performance(predObj, measure="tpr", x.measure="fpr")
 aucObj = performance(predObj, measure="auc")
 plot(rocObj, main = paste("Area under the curve:",
@@ -418,13 +402,13 @@ round(aucObj@y.values[[1]] ,4)))
 white_lr_train_reduced <- glm(formula = label_binary ~ 
                 fixed.acidity + volatile.acidity + citric.acid
               + residual.sugar + chlorides + free.sulfur.dioxide
-              + sulphates, data = traindata_white,
+              + sulphates, data = traindata_white_reduced,
               family = binomial(link="logit"))
 
 summary(white_lr_train_reduced)
 
-pred = predict.glm(white_lr_train_reduced, testdata_white,  type="response")
-predObj <- prediction(pred, testdata_white$label_binary)
+pred = predict.glm(white_lr_train_reduced, testdata_white_reduced,  type="response")
+predObj <- prediction(pred, testdata_white_reduced$label_binary)
 rocObj = performance(predObj, measure="tpr", x.measure="fpr")
 aucObj = performance(predObj, measure="auc")
 plot(rocObj, main = paste("Area under the curve:",

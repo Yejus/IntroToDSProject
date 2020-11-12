@@ -14,6 +14,8 @@ library(ROCR)
 library(tidyverse)
 library(tidyr)
 library(broom)
+library(rpart)
+library(rpart.plot)
 
 ```
 
@@ -36,28 +38,33 @@ Output variable (based on sensory data):
 12 - quality (score between 0 and 10)  
 
 **Research Question**  
-Can we predict with good accuracy the quality of wine for both the red and the white varieties by considering their chemical properties, and identify the most significant predictors that make a good red wine or white wine? 
+Can we predict with good accuracy the quality of wine for both the red and the white varieties by considering their chemical properties, and identify the most significant features that predict a good red wine or white wine? 
 
 **Research Approach**  
-01 - EDA  
+To answer the research question, we will undertake the following approach:  
+
+1. First, we will carry out Exploratory Data Analysis (EDA) on our datasets. This helps us to make decisions in building our classifers by examining what the data suggests, such as by looking if the chemical compounds appear to be different between the types of wine for example, and if the variables are correlated.  
+
+This is done by:  
 * Representing each variable as a boxplot  
 * Scatterplot matrix  
 
-02 - Building Predictors  
+2. Second, we will then build our classifiers which we will use to predict the quality of the wine. We will label the wine as `good` if it is above the median value of 6, and the wine as `bad` if it is equal to or lower than 6. Since this is a binary response variable, there are three suitable classifiers we have learnt which are: 
 * Logistic Regression  
 * Decision Tree  
 * Naive Bayes  
 
-03 - Identifying Significant Predictors  
-* PCA  
-* Stepwise Regression  
+Thus, we will build each of the classifer, evaluate their performance by looking at their ROC plots, as well as their AUC values, and then decide on which classifier is best suited to predict wine quality.  
+
+3. Finally, we will also perform stepwise regression to identify what the most significant features are in predicting wine quality by performing stepwise regression.  
+
 
 ### Preparing the data 
 
 ```{r}
 data_allwine <- read.csv("~/projects/yalenus/IntroToDSProject/wine.csv")
 data_redwine <- read.csv("winequality-red.csv")
-data_whitewine <- read.csv("winequality-white.csv", sep=";")
+data_whitewine <- read.csv("winequality-white.csv")
 ```
 
 ### Exploratory Data Analysis (EDA)
@@ -93,8 +100,6 @@ data_redwine_reduced <- data_redwine[vars_red]
 
 vars_white <- c("fixed.acidity", "volatile.acidity", "citric.acid", "residual.sugar", "chlorides", "free.sulfur.dioxide", "sulphates", "quality")
 data_whitewine_reduced <- data_whitewine[vars_white]
-
-
 ```
 
 
@@ -103,18 +108,14 @@ data_whitewine_reduced <- data_whitewine[vars_white]
 **Assign Labels**  
 ```{r}
 
-data_all_wine_labelled <- mutate(data_allwine,
-                                 label = case_when(
-                                   quality > 6 ~ "good", 
-                                   quality <= 6 ~ "bad"
-                                 ))
-
+# assign labels for red wine (full dataset)
 data_red_wine_labelled <- mutate(data_redwine,
        label = case_when(
          quality > 6 ~ "good", 
          quality <= 6 ~ "bad"
        ))
 
+# assign labels for white wine (full dataset)
 data_white_wine_labelled <- mutate(data_whitewine,
                                 label = case_when(
                                   quality > 6 ~ "good", 
@@ -122,82 +123,79 @@ data_white_wine_labelled <- mutate(data_whitewine,
                                 ))
 
 
-data_red_wine_labelled$label_binary <- as.numeric((data_red_wine_labelled$quality >6 ))
-data_white_wine_labelled$label_binary <- as.numeric((data_white_wine_labelled$quality >6 ))
-
+# assign labels for red wine (reduced dataset)
 data_redwine_reduced_labelled <- mutate(data_redwine_reduced,
        label = case_when(
          quality > 6 ~ "good", 
          quality <= 6 ~ "bad"
        ))
 
+# assign labels for white wine (reduced dataset)
 data_whitewine_reduced_labelled <- mutate(data_whitewine_reduced,
                                 label = case_when(
                                   quality > 6 ~ "good", 
                                   quality <= 6 ~ "bad"
                                 ))
 
-data_redwine_reduced_labelled$label_binary <- as.numeric((data_redwine_reduced_labelled$quality  >6 ))
-data_whitewine_reduced_labelled$label_binary <- as.numeric((data_whitewine_reduced_labelled$quality >6 ))
+
+# data_red_wine_labelled$label_binary <- as.numeric((data_red_wine_labelled$quality >6 ))
+# data_white_wine_labelled$label_binary <- as.numeric((data_white_wine_labelled$quality >6 ))
+
+# data_redwine_reduced_labelled$label_binary <- as.numeric((data_redwine_reduced_labelled$quality  >6 ))
+# data_whitewine_reduced_labelled$label_binary <- as.numeric((data_whitewine_reduced_labelled$quality >6 ))
 
 ```
+
+
+**Data Partition** 
+To compare the classifiers fairly, we will use the same partitioned training (80%) and testing (20%) data for all classifiers. 
+
+```{r}
+
+# Partition red wine full dataset
+set.seed(100000)
+indxTrain_red_full <- createDataPartition(y = data_red_wine_labelled$label ,p = 0.8,list = FALSE) 
+traindata_red_full <- data_red_wine_labelled[indxTrain_red_full, !(names(data_red_wine_labelled) %in% c('quality'))]
+testdata_red_full <- data_red_wine_labelled[-indxTrain_red_full, !(names(data_red_wine_labelled) %in% c('quality'))]
+
+# Partition white wine full dataset
+set.seed(100000)
+indxTrain_white_full <- createDataPartition(y = data_white_wine_labelled$label ,p = 0.8,list = FALSE) 
+traindata_white_full <- data_white_wine_labelled[indxTrain_white_full, !(names(data_white_wine_labelled) %in% c('quality'))]
+testdata_white_full <- data_white_wine_labelled[-indxTrain_white_full, !(names(data_white_wine_labelled) %in% c('quality'))]
+
+
+# Partition red wine reduced dataset
+set.seed(100000)
+indxTrain_red_reduced <- createDataPartition(y = data_redwine_reduced_labelled$label ,p = 0.8,list = FALSE) 
+traindata_red_reduced <- data_redwine_reduced_labelled[indxTrain_red_reduced, !(names(data_redwine_reduced_labelled) %in% c('quality'))]
+testdata_red_reduced <- data_redwine_reduced_labelled[-indxTrain_red_reduced, !(names(data_redwine_reduced_labelled) %in% c('quality'))]
+
+
+# Partition white wine reduced dataset
+set.seed(100000)
+indxTrain_white_reduced <- createDataPartition(y = data_whitewine_reduced_labelled$label ,p = 0.8,list = FALSE) # uses random sampling
+traindata_white_reduced <- data_whitewine_reduced_labelled[indxTrain_white_reduced, !(names(data_whitewine_reduced_labelled) %in% c('quality'))]
+testdata_white_reduced <- data_whitewine_reduced_labelled[-indxTrain_white_reduced, !(names(data_whitewine_reduced_labelled) %in% c('quality'))]
+
+```
+
 
 **Naive Bayes**  
-
-**All Wines**  
-```{r}
-### All Wine NB Analysis
-# Note that 'type' is also used as a feature in predicting quality here
-
-indxTrain_allwine <- createDataPartition(y = data_all_wine_labelled$label ,p = 0.8,list = FALSE) # uses random sampling
-traindata_allwine <- data_all_wine_labelled[indxTrain_allwine, !(names(data_all_wine_labelled) %in% c('quality'))]
-testdata_allwine <- data_all_wine_labelled[-indxTrain_allwine, !(names(data_all_wine_labelled) %in% c('quality'))]
-
-nb_model_allwine <- naiveBayes(as.factor(label) ~ . , traindata_allwine, laplace=.01)
-
-nb_prediction_allwine <- predict(nb_model_allwine,
-                         # remove column "label"
-                         testdata_allwine[,!(names(data_all_wine_labelled) %in% c('label'))],
-                         type='raw') 
-
-score_allwine <- nb_prediction_allwine[, c("good")]
-
-actual_class_allwine <- testdata_allwine$label == 'good' 
-pred_allwine <- prediction(score_allwine, actual_class_allwine)
-perf_allwine <- performance(pred_allwine, "tpr", "fpr")
-```
-
-```{r}
-plot(perf_allwine, lwd=2, xlab="False Positive Rate (FPR)", ylab="True Positive Rate (TPR)")
-abline(a=0, b=1, col="gray50", lty=3)
-```
-
-
-```{r}
-auc_allwine <- performance(pred_allwine, "auc")
-auc_allwine <- unlist(slot(auc_allwine, "y.values"))
-auc_allwine
-```
-
-
 **White Wine**
 ``` {r}
 ### White Wine NB Analysis
-set.seed(100000)
-indxTrain_white <- createDataPartition(y = data_whitewine_reduced_labelled$label ,p = 0.8,list = FALSE)
-traindata_white <- data_whitewine_reduced_labelled[indxTrain_white, !(names(data_whitewine_reduced_labelled) %in% c('quality'))]
-testdata_white <- data_whitewine_reduced_labelled[-indxTrain_white, !(names(data_whitewine_reduced_labelled) %in% c('quality'))]
 
-nb_model_white <- naiveBayes(as.factor(label) ~ . , traindata_white, laplace=.01)
+nb_model_white <- naiveBayes(as.factor(label) ~ . , traindata_white_full, laplace=.01)
 
 nb_prediction_white <- predict(nb_model_white,
                          # remove column "label"
-                         testdata_white[,!(names(data_whitewine_reduced_labelled) %in% c('label', 'label_binary'))],
+                         testdata_white_full[,!(names(data_white_wine_labelled) %in% c('label', 'label_binary'))],
                          type='raw') 
 
 nb_score_white <- nb_prediction_white[, c("good")]
 
-actual_class_white <- testdata_white$label == 'good' 
+actual_class_white <- testdata_white_full$label == 'good' 
 nb_pred_white <- prediction(nb_score_white, actual_class_white)
 nb_perf_white <- performance(nb_pred_white, "tpr", "fpr")
 
@@ -220,21 +218,18 @@ nb_auc_white
 **Red Wine**
 ``` {r}
 
-set.seed(100000)
-indxTrain <- createDataPartition(y = data_redwine_reduced_labelled$label ,p = 0.8,list = FALSE) # uses random sampling
-traindata <- data_redwine_reduced_labelled[indxTrain, !(names(data_redwine_reduced_labelled) %in% c('quality'))]
-testdata <- data_redwine_reduced_labelled[-indxTrain, !(names(data_redwine_reduced_labelled) %in% c('quality'))]
 
-nb_model_red <- naiveBayes(as.factor(label) ~ . , traindata, laplace=.01)
+
+nb_model_red <- naiveBayes(as.factor(label) ~ . , traindata_red_full, laplace=.01)
 
 nb_prediction_red <- predict(nb_model_red,
                          # remove column "label"
-                         testdata[,!(names(data_redwine_reduced_labelled) %in% c('label','label_binary'))],
+                         testdata_red_full[,!(names(data_red_wine_labelled) %in% c('label','label_binary'))],
                          type='raw') 
 
 nb_score_red <- nb_prediction_red[, c("good")]
 
-actual_class_red <- testdata$label == 'good' 
+actual_class_red <- testdata_red_full$label == 'good' 
 nb_pred_red <- prediction(nb_score_red, actual_class_red)
 nb_perf_red <- performance(nb_pred_red, "tpr", "fpr")
 
@@ -265,7 +260,7 @@ abline(a=0, b=1, col="gray50", lty=3)
 **Multiple lines in single plot**
 ``` {r}
 par(mfrow=c(1,1)) 
-plot(nb_perf_red, col="red", lwd=2, main="All Wine Quality Label NB Model Prediction Perf", xlab="False Positive Rate (FPR)", ylab="True Positive Rate (TPR)")
+plot(nb_perf_red, col="red", lwd=2, main="Wine Quality Label NB Model Prediction Perf (Full Dataset)", xlab="False Positive Rate (FPR)", ylab="True Positive Rate (TPR)")
 abline(a=0, b=1, col="gray50", lty=3)
 
 # par(new = TRUE)  # We draw on top of the existing plot.
@@ -307,13 +302,19 @@ Split the data into training data and testing data into 80/20 percent of the dat
      
 ```{r}
 
-traindata_full <- data_red_wine_labelled[indxTrain, !(names(data_red_wine_labelled) %in% c('quality'))]
-testdata_full <- data_red_wine_labelled[-indxTrain, !(names(data_red_wine_labelled) %in% c('quality'))]
+data_red_wine_labelled$label_binary <- as.numeric((data_red_wine_labelled$quality >6 ))
+data_white_wine_labelled$label_binary <- as.numeric((data_white_wine_labelled$quality >6 ))
 
-traindata_white_full <- data_white_wine_labelled[indxTrain_white, !(names(data_white_wine_labelled) %in% c('quality'))]
-testdata_white_full <- data_white_wine_labelled[-indxTrain_white, !(names(data_white_wine_labelled) %in% c('quality'))]
+data_redwine_reduced_labelled$label_binary <- as.numeric((data_redwine_reduced_labelled$quality  >6 ))
+data_whitewine_reduced_labelled$label_binary <- as.numeric((data_whitewine_reduced_labelled$quality >6 ))
 
+traindata_full <- data_red_wine_labelled[indxTrain_red_full, !(names(data_red_wine_labelled) %in% c('quality'))]
+testdata_full <- data_red_wine_labelled[-indxTrain_red_full, !(names(data_red_wine_labelled) %in% c('quality'))]
 
+traindata_white_full <- data_white_wine_labelled[indxTrain_white_full, !(names(data_white_wine_labelled) %in% c('quality'))]
+testdata_white_full <- data_white_wine_labelled[-indxTrain_white_full, !(names(data_white_wine_labelled) %in% c('quality'))]
+
+traindata_full
 ```
 
 **Red Wine** 
@@ -321,6 +322,8 @@ testdata_white_full <- data_white_wine_labelled[-indxTrain_white, !(names(data_w
 **Full Model** 
 
 ```{r}
+
+
 
 red_lr_train <- glm(formula = label_binary ~ 
                 fixed.acidity + volatile.acidity + citric.acid
@@ -862,6 +865,13 @@ Significant variables:
  - fixed.acidity 
  - sulphates
  - residual.sugar
+ 
+ 
+ **Decision Trees**  
+ 
+ 
+ 
+ 
 
 
 

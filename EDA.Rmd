@@ -193,7 +193,7 @@ chart.Correlation(corr_red, histogram = TRUE, pch = 1)
 And for White wines:
 ```{r}
 white_map <- heatmap.2(x = corr_white, col = rev(heat.colors(16)), symm = TRUE, dendrogram = 'none', 
-trace = 'none', main = "Correlation Matrix for Red Wines", key = TRUE,
+trace = 'none', main = "Correlation Matrix for White Wines", key = TRUE,
  lmat=rbind( c(0, 3), c(2,1), c(0,4) ), lhei=c(1.5,4,1.5), lwid = c(0.5,3), srtRow = 10, srtCol = 20, symkey = TRUE, key.title = NA,
  tracecol = 'blue')
 chart.Correlation(corr_white, histogram = TRUE, pch = 1)

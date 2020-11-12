@@ -172,94 +172,92 @@ nb_prediction_white <- predict(nb_model_white,
                          testdata_white[,!(names(data_white_wine_labelled) %in% c('label'))],
                          type='raw') 
 
-score_white <- nb_prediction_white[, c("good")]
+nb_score_white <- nb_prediction_white[, c("good")]
 
 actual_class_white <- testdata_white$label == 'good' 
-pred_white <- prediction(score_white, actual_class_white)
-perf_white <- performance(pred_white, "tpr", "fpr")
+nb_pred_white <- prediction(nb_score_white, actual_class_white)
+nb_perf_white <- performance(nb_pred_white, "tpr", "fpr")
 
 ```
 
 
 ``` {r}
-plot(perf_white, lwd=2, xlab="False Positive Rate (FPR)", ylab="True Positive Rate (TPR)")
+plot(nb_perf_white, col="blue", lwd=2, xlab="False Positive Rate (FPR)", ylab="True Positive Rate (TPR)")
 abline(a=0, b=1, col="gray50", lty=3)
 ```
 
 
 ``` {r}
-auc_white <- performance(pred_white, "auc")
-auc_white <- unlist(slot(auc_white, "y.values"))
-auc_white
+nb_auc_white <- performance(nb_pred_white, "auc")
+nb_auc_white <- unlist(slot(nb_auc_white, "y.values"))
+nb_auc_white
 
 ```
 
 **Red Wine**
 ``` {r}
+
 indxTrain <- createDataPartition(y = data_red_wine_labelled$label ,p = 0.8,list = FALSE) # uses random sampling
 traindata <- data_red_wine_labelled[indxTrain, !(names(data_red_wine_labelled) %in% c('quality'))]
 testdata <- data_red_wine_labelled[-indxTrain, !(names(data_red_wine_labelled) %in% c('quality'))]
 
-nb_model <- naiveBayes(as.factor(label) ~ . , traindata, laplace=.01)
+nb_model_red <- naiveBayes(as.factor(label) ~ . , traindata, laplace=.01)
 
-nb_prediction <- predict(nb_model,
+nb_prediction_red <- predict(nb_model_red,
                          # remove column "label"
                          testdata[,!(names(data_red_wine_labelled) %in% c('label'))],
                          type='raw') 
 
-score <- nb_prediction[, c("good")]
+nb_score_red <- nb_prediction_red[, c("good")]
 
-actual_class <- testdata$label == 'good' 
-pred <- prediction(score, actual_class)
-perf <- performance(pred, "tpr", "fpr")
+actual_class_red <- testdata$label == 'good' 
+nb_pred_red <- prediction(nb_score_red, actual_class_red)
+nb_perf_red <- performance(nb_pred_red, "tpr", "fpr")
+
 ```
 
 ``` {r}
-plot(perf, lwd=2, xlab="False Positive Rate (FPR)", ylab="True Positive Rate (TPR)")
+plot(nb_perf_red, lwd=2, xlab="False Positive Rate (FPR)", ylab="True Positive Rate (TPR)")
 abline(a=0, b=1, col="gray50", lty=3)
 ```
 
 ``` {r}
-auc <- performance(pred, "auc")
-auc <- unlist(slot(auc, "y.values"))
-auc
+nb_auc_red <- performance(nb_pred_red, "auc")
+nb_auc_red <- unlist(slot(nb_auc_red, "y.values"))
+nb_auc_red
 ```
 
 
 **Side-by-side Plot**
 
 ``` {r}
-par(mfrow=c(1,3)) 
-plot(perf_allwine, lwd=2, main="All Wine Quality Label NB Model Prediction Perf", xlab="False Positive Rate (FPR)", ylab="True Positive Rate (TPR)")
+par(mfrow=c(1,2)) 
+plot(nb_perf_red, col="red", lwd=2, main="Red Wine Quality Label NB Model Prediction Perf", xlab="False Positive Rate (FPR)", ylab="True Positive Rate (TPR)")
 abline(a=0, b=1, col="gray50", lty=3)
-plot(perf, lwd=2, main="Red Wine Quality Label NB Model Prediction Perf", xlab="False Positive Rate (FPR)", ylab="True Positive Rate (TPR)")
-abline(a=0, b=1, col="gray50", lty=3)
-plot(perf_white, lwd=2, main="White Wine Quality Label NB Model Prediction Perf", xlab="False Positive Rate (FPR)", ylab="True Positive Rate (TPR)")
+plot(nb_perf_white, col="blue", lwd=2, main="White Wine Quality Label NB Model Prediction Perf", xlab="False Positive Rate (FPR)", ylab="True Positive Rate (TPR)")
 abline(a=0, b=1, col="gray50", lty=3)
 ```
 
 **Multiple lines in single plot**
 ``` {r}
 par(mfrow=c(1,1)) 
-plot(perf_allwine, lwd=2, main="All Wine Quality Label NB Model Prediction Perf", xlab="False Positive Rate (FPR)", ylab="True Positive Rate (TPR)")
+plot(nb_perf_red, col="red", lwd=2, main="All Wine Quality Label NB Model Prediction Perf", xlab="False Positive Rate (FPR)", ylab="True Positive Rate (TPR)")
 abline(a=0, b=1, col="gray50", lty=3)
 
-par(new = TRUE)  # We draw on top of the existing plot.
-plot(perf, col = "red", lwd=2, main="", xlab="", ylab="")
+# par(new = TRUE)  # We draw on top of the existing plot.
+# plot(perf, col = "red", lwd=2, main="", xlab="", ylab="")
 
 par(new = TRUE)  # We draw on top of the existing plot.
-plot(perf_white, col = "blue", lwd=2, main="", xlab="", ylab="")
+plot(nb_perf_white, col = "blue", lwd=2, main="", xlab="", ylab="")
 
 legend("topleft",
-       legend = c("Red Wine", "White Wine", 
-                  "All Wine"),
-       col = c("red", "blue", "black"),
+       legend = c("Red Wine", "White Wine"),
+       col = c("red", "blue"),
        pch = c(0, 0, 0))
 ```
 
 **AUCs**
 ```{r}
-print(paste0("AUC of NB Model (All Wine):", auc_allwine))
-print(paste0("AUC of NB Model (Red Wine):", auc))
-print(paste0("AUC of NB Model (White Wine):", auc_white))
+print(paste0("AUC of NB Model (Red Wine):", nb_auc_red))
+print(paste0("AUC of NB Model (White Wine):", nb_auc_white))
 ```

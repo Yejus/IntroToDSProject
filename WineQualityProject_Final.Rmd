@@ -397,6 +397,7 @@ white_lr_train <- glm(formula = label_binary ~
               + sulphates + alcohol, data = traindata_white_full,
               family = binomial(link="logit"))
 
+summary(white_lr_train)
 
 pred = predict.glm(white_lr_train, testdata_white_full,  type="response")
 predObj <- prediction(pred, testdata_white_full$label_binary)
@@ -417,6 +418,7 @@ white_lr_train_reduced <- glm(formula = label_binary ~
               + sulphates, data = traindata_white,
               family = binomial(link="logit"))
 
+summary(white_lr_train_reduced)
 
 pred = predict.glm(white_lr_train_reduced, testdata_white,  type="response")
 predObj <- prediction(pred, testdata_white$label_binary)

@@ -250,7 +250,7 @@ trace = 'none', main = "Correlation Matrix for White Wines (New)", key = TRUE,
 ### Building Predictors 
 
 **Assign Labels**  
-  ```{r}
+```{r}
 
 # assign labels for red wine (full dataset)
 data_red_wine_labelled <- mutate(data_redwine,
@@ -327,8 +327,8 @@ testdata_white_reduced <- data_whitewine_reduced_labelled[-indxTrain_white_reduc
 
 **Naive Bayes**  
   
-  **White Wine (Reduced Dataset)**
-  ``` {r}
+**White Wine (Reduced Dataset)**
+``` {r}
 ### White Wine NB Analysis
 
 nb_model_white_reduced <- naiveBayes(as.factor(label) ~ . - label_binary , traindata_white_reduced, laplace=.01)
@@ -362,7 +362,7 @@ nb_auc_white_reduced
 ```
 
 **Red Wine (Reduced Dataset)**
-  ``` {r}
+``` {r}
 nb_model_red_reduced <- naiveBayes(as.factor(label) ~ . - label_binary, traindata_red_reduced, laplace=.01)
 
 nb_prediction_red_reduced <- predict(nb_model_red_reduced,
@@ -392,7 +392,7 @@ nb_auc_red_reduced
 
 **Side-by-side Plot**
   
-  ``` {r}
+``` {r}
 par(mfrow=c(1,2)) 
 plot(nb_perf_red_reduced, col="red", lwd=2, main="Red Wine Quality Label NB Model Prediction Perf", xlab="False Positive Rate (FPR)", ylab="True Positive Rate (TPR)")
 abline(a=0, b=1, col="gray50", lty=3)
@@ -401,7 +401,7 @@ abline(a=0, b=1, col="gray50", lty=3)
 ```
 
 **Multiple lines in single plot**
-  ``` {r}
+``` {r}
 par(mfrow=c(1,1)) 
 plot(nb_perf_red_reduced, col="red", lwd=2, main="Wine Quality Label NB Model Prediction Perf (Reduced Dataset)", xlab="False Positive Rate (FPR)", ylab="True Positive Rate (TPR)")
 abline(a=0, b=1, col="gray50", lty=3)
@@ -420,7 +420,7 @@ legend("topleft",
 
 
 **White Wine**
-  ``` {r}
+``` {r}
 ### White Wine NB Analysis
 
 nb_model_white <- naiveBayes(as.factor(label) ~ . - label_binary , traindata_white_full, laplace=.01)
@@ -454,7 +454,7 @@ nb_auc_white
 ```
 
 **Red Wine**
-  ``` {r}
+``` {r}
 
 
 
@@ -487,7 +487,7 @@ nb_auc_red
 
 **Side-by-side Plot**
   
-  ``` {r}
+``` {r}
 par(mfrow=c(1,2))
 plot(nb_perf_red, col="red", lwd=2, main="Red Wine Quality Label NB Model Prediction Perf", xlab="False Positive Rate (FPR)", ylab="True Positive Rate (TPR)")
 abline(a=0, b=1, col="gray50", lty=3)
@@ -496,7 +496,7 @@ abline(a=0, b=1, col="gray50", lty=3)
 ```
 
 **Multiple lines in single plot**
-  ``` {r}
+``` {r}
 par(mfrow=c(1,1)) 
 plot(nb_perf_red, col="red", lwd=2, main="Wine Quality Label NB Model Prediction Perf (Full Dataset)", xlab="False Positive Rate (FPR)", ylab="True Positive Rate (TPR)")
 abline(a=0, b=1, col="gray50", lty=3)
@@ -514,7 +514,7 @@ legend("topleft",
 ```
 
 **AUCs (Full Dataset)**
-  ```{r}
+```{r}
 print(paste0("AUC of NB Model (Red Wine Full Dataset):", nb_auc_red))
 print(paste0("AUC of NB Model (White Wine Full Dataset):", nb_auc_white))
 ```
@@ -540,9 +540,9 @@ Split the data into training data and testing data into 80/20 percent of the dat
 
 **Red Wine** 
   
-  **Full Model** 
+**Full Model** 
   
-  ```{r}
+```{r}
 
 
 
@@ -568,7 +568,7 @@ lr_auc_red <- round(aucObj@y.values[[1]] ,4)
 
 **Reduced Model** 
   
-  ```{r}
+```{r}
 
 red_lr_train_reduced <- glm(formula = label_binary ~ 
                               citric.acid
@@ -615,9 +615,9 @@ ggplot(mydata, aes(logit, predictor.value))+
 
 **White Wine** 
   
-  **Full Model** 
+**Full Model** 
   
-  ```{r}
+```{r}
 
 white_lr_train <- glm(formula = label_binary ~ 
                         fixed.acidity + volatile.acidity + citric.acid
@@ -642,7 +642,7 @@ lr_auc_white <- round(aucObj@y.values[[1]] ,4)
 
 **Reduced Model** 
   
-  ```{r}
+```{r}
 
 white_lr_train_reduced <- glm(formula = label_binary ~ 
                                 fixed.acidity + volatile.acidity + citric.acid
@@ -687,7 +687,7 @@ ggplot(mydata, aes(logit, predictor.value))+
 
 **Decision Trees**  
   
-  ```{r}
+```{r}
 # Red wine (reduced dataset)
 dt_fit_red_reduced  <- rpart(label ~ citric.acid
                              + residual.sugar + chlorides + free.sulfur.dioxide
@@ -812,8 +812,8 @@ dt_auc_white_full
 
 **Evaluating Classifiers**
   
-  Comparing AUC values:  
-  ```{r}
+Comparing AUC values:  
+```{r}
 print(paste0("AUC of Naive Bayes Model (Red Wine Reduced Dataset):", nb_auc_red_reduced))
 print(paste0("AUC of Decision Tree Model (Red Wine Reduced Dataset):", dt_auc_red_reduced))
 print(paste0("AUC of Logistic Regression Model (Red Wine Reduced Dataset):", lr_auc_red_reduced))
@@ -824,7 +824,7 @@ print(paste0("AUC of Logistic Regression Model (White Wine Reduced Dataset):", l
 ```
 
 **Combining AOCs in single plot**
-  ``` {r}
+``` {r}
 par(mfrow=c(1,1)) 
 plot(nb_perf_red_reduced, col="darkred", lwd=2, main="Wine Quality Label NB Model Prediction Perf (Full Dataset)", xlab="False Positive Rate (FPR)", ylab="True Positive Rate (TPR)")
 abline(a=0, b=1, col="gray50", lty=3)
@@ -856,7 +856,7 @@ legend("topright",
 
 **Stepwise Regression** 
   
-  We use stepwise regression using logistic regression focusing on p-values in order to determine the significant variables that affect the quality of wine (using quality above median as the binary response variable)
+We use stepwise regression using logistic regression focusing on p-values in order to determine the significant variables that affect the quality of wine (using quality above median as the binary response variable)
 
 Since we use logistic regression using stepwise regression, we must make sure that variables are independent from one another, i.e none of the variables are heavily correlated with each other, so we use the reduced predictor set as explained in our EDA.
 
@@ -866,11 +866,11 @@ Both backward elimination and forward selection are considered.
 
 **Red Wine**
   
-  data_redwine_reduced_labelled
+data_redwine_reduced_labelled
 
 **Back Elimination**
   
-  ```{r}
+```{r}
 
 red_new_lr <- glm(formula = data_redwine_reduced_labelled$label_binary ~ 
                     data_redwine_reduced_labelled$citric.acid
@@ -919,7 +919,7 @@ Significant variables:
 **Forward Selection **
   
   
-  ```{r}
+```{r}
 
 red_lr_new_fs1_1 <- glm(formula = data_redwine_reduced_labelled$label_binary ~ data_redwine_reduced_labelled$citric.acid,
                         family = binomial(link="logit"))
@@ -1104,7 +1104,7 @@ Significant variables:
 
 **Forward Selection**
   
-  ```{r}
+```{r}
 
 white_lr_new_fs1_1 <- glm(formula = data_whitewine_reduced_labelled$label_binary ~ data_whitewine_reduced_labelled$fixed.acidity,
                           family = binomial(link="logit"))

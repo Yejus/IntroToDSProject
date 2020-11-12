@@ -139,6 +139,11 @@ some distinction between the two kinds of wine. We need a different method.
 We run a PCA on the combined dataset as follows:
 
 ```{r}
+
+source('https://raw.githubusercontent.com/vqv/ggbiplot/master/R/ggbiplot.r')
+
+source('https://raw.githubusercontent.com/vqv/ggbiplot/master/R/ggscreeplot.r')
+
 pca_total <- prcomp(total[,c(1:11)], scale. = TRUE, center = TRUE)
 
 ggbiplot(pca_total, obs.scale = 1, var.scale = 1, groups = total$label, ellipse = TRUE) +

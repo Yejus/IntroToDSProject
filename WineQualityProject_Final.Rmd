@@ -71,6 +71,30 @@ for(i in 1:11){
 }
 ```
 
+**Exploring Correlation Between Variables** 
+
+TO ADD: exploration on correlation between variables + explanation on approach of dropping of variables (textbook)
+
+
+Since the classifiers we are evaluating (Logistic Regression, Naive Bayes and Decision Trees) do not handle correlated features well, we can directly work with only the variables we have chose to keep in our dataset:
+
+```{r}
+# Retained variables for red 
+# citric.acid + residual.sugar + chlorides + free.sulfur.dioxide + sulphates + alcohol
+
+vars_red <- c("citric.acid", "residual.sugar", "chlorides", "free.sulfur.dioxide", "sulphates", "alcohol", "quality")
+data_redwine<- data_redwine[vars_red]
+
+# Retained variables for white
+# fixed.acidity + volatile.acidity + citric.acid + residual.sugar + chlorides + free.sulfur.dioxide + sulphates
+
+vars_white <- c("fixed.acidity", "volatile.acidity", "citric.acid", "residual.sugar", "chlorides", "free.sulfur.dioxide", "sulphates", "quality")
+data_whitewine <- data_whitewine[vars_white]
+
+
+```
+
+
 ### Building Predictors 
 
 **Assign Labels**  

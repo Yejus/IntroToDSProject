@@ -627,8 +627,8 @@ plot(nb_perf_white_reduced, col = "blue", lwd=2, main="", xlab="", ylab="")
 par(new = TRUE)  # We draw on top of the existing plot.
 plot(dt_perf_red_reduced, col = "red", lwd=2, lty=2, main="", xlab="", ylab="")
 
-# par(new = TRUE)  # We draw on top of the existing plot.
-# plot(dt_perf_white_reduced, col = "blue", lwd=2, lty=2, main="", xlab="", ylab="")
+par(new = TRUE)  # We draw on top of the existing plot.
+plot(dt_perf_white_reduced, col = "blue", lwd=2, lty=2, main="", xlab="", ylab="")
 
 par(new = TRUE)  # We draw on top of the existing plot.
 plot(lr_perf_red_reduced, col = "red", lwd=2, lty=3, main="", xlab="", ylab="")

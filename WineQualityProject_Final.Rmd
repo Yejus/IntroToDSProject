@@ -1,5 +1,5 @@
 ---
-title: "Wine Quality Data Project"
+title: "Intro to DS Final Project"
 author: "Anant Jain, Eddie Lim, Joanas Tan, Rishav Koirala"
 date: "11/11/2020"
 output: html_document
@@ -28,8 +28,9 @@ library(PerformanceAnalytics)
 
 ```
 
-### Introduction 
+## Introduction 
 
+### Project Brief
 **Data Information**  
 The data set we have chosen are related to red and white variants of the Portuguese "Vinho Verde" wine. There are a total of 12 inputs variables obtained using physicochemical tests in the data set, which are: 
 1 - fixed acidity  
@@ -90,7 +91,6 @@ total <- rbind(data_redwine, data_whitewine)
 total <- na.omit(total)
 ```
 
-
 **Using k-means clustering to attempt to classify the total wine dataset**
 
 ```{r}
@@ -100,7 +100,7 @@ kmdata <- as.matrix(total[c("fixed.acidity", "volatile.acidity", "citric.acid",
 
 km <- kmeans(kmdata, 2, nstart = 25)
 ```
-```
+
 Because the dataset has 11 predictors, there are $^11C_2 = 55$ ways to plot pairs of predictors on a 2D-plane. 
 We only select a few to plot below: 
 
@@ -253,7 +253,15 @@ trace = 'none', main = "Correlation Matrix for White Wines (New)", key = TRUE,
  tracecol = 'blue')
 ```
 
-### Building Predictors 
+## Building Classifiers 
+
+For all classifiers, the aim is to predict whether the wine is above median quality or otherwise, hence the response variable would be the binary variable whether the wine is “good” or “bad”. We can prepare our data for all three classifiers by adding the labels `good` or `bad` to the dataset.  
+
+Furthermore, we also use the reduced dataset with correlated variables removed as per the EDA above, as all three classifers do not handle (or do not handle well) correlated variables. We have still provided the classifiers with the full dataset in the appendix below.   
+
+All classifers also share the same partitioning of 80/20 for the training data and test data split.  
+
+### Data Set-up  
 
 **Assign Labels**  
 ```{r}
@@ -297,8 +305,8 @@ data_whitewine_reduced_labelled$label_binary <- as.numeric((data_whitewine_reduc
 ```
 
 
-**Data Partition** 
-  To compare the classifiers fairly, we will use the same partitioned training (80%) and testing (20%) data for all classifiers. 
+**Data Partitioning** 
+To compare the classifiers fairly, we will use the same partitioned training (80%) and testing (20%) data for all classifiers. 
 
 ```{r}
 
@@ -331,41 +339,9 @@ testdata_white_reduced <- data_whitewine_reduced_labelled[-indxTrain_white_reduc
 ```
 
 
-**Naive Bayes**  
-  
-**White Wine (Reduced Dataset)**
-``` {r}
-### White Wine NB Analysis
+### Naive Bayes 
 
-nb_model_white_reduced <- naiveBayes(as.factor(label) ~ . - label_binary , traindata_white_reduced, laplace=.01)
-
-nb_prediction_white_reduced <- predict(nb_model_white_reduced,
-                                       # remove column "label" and "label_binary"
-                                       testdata_white_full[,!(names(data_whitewine_reduced_labelled) %in% c('label', 'label_binary'))],
-                                       type='raw') 
-
-nb_score_white_reduced <- nb_prediction_white_reduced[, c("good")]
-
-actual_class_white_reduced <- testdata_white_reduced$label == 'good' 
-nb_pred_white_reduced <- prediction(nb_score_white_reduced, actual_class_white_reduced)
-nb_perf_white_reduced <- performance(nb_pred_white_reduced, "tpr", "fpr")
-
-
-```
-
-
-``` {r}
-plot(nb_perf_white_reduced, col="blue", lwd=2, xlab="False Positive Rate (FPR)", ylab="True Positive Rate (TPR)")
-abline(a=0, b=1, col="gray50", lty=3)
-```
-
-
-``` {r}
-nb_auc_white_reduced <- performance(nb_pred_white_reduced, "auc")
-nb_auc_white_reduced <- unlist(slot(nb_auc_white_reduced, "y.values"))
-nb_auc_white_reduced
-
-```
+As mentioned with in the general approach to the classifiers, the Naive Bayes classifier we train uses the reduced dataset with the correlated variables removed. This is because Naïve Bayes assumes the variables in the data are conditionally independent. Therefore, it is sensitive to correlated variables because the algorithm may double count the effects.  
 
 **Red Wine (Reduced Dataset)**
 ``` {r}
@@ -373,7 +349,7 @@ nb_model_red_reduced <- naiveBayes(as.factor(label) ~ . - label_binary, traindat
 
 nb_prediction_red_reduced <- predict(nb_model_red_reduced,
                                      # remove column "label"
-                                     testdata_red_full[,!(names(data_redwine_reduced_labelled) %in% c('label','label_binary'))],
+                                     testdata_red_reduced[,!(names(data_redwine_reduced_labelled) %in% c('label','label_binary'))],
                                      type='raw') 
 
 nb_score_red_reduced <- nb_prediction_red_reduced[, c("good")]
@@ -385,7 +361,7 @@ nb_perf_red_reduced <- performance(nb_pred_red_reduced, "tpr", "fpr")
 ```
 
 ``` {r}
-plot(nb_perf_red_reduced, lwd=2, xlab="False Positive Rate (FPR)", ylab="True Positive Rate (TPR)")
+plot(nb_perf_red_reduced, main="Red Wine Quality Label NB Model Prediction Perf", col="red", lwd=2, xlab="False Positive Rate (FPR)", ylab="True Positive Rate (TPR)")
 abline(a=0, b=1, col="gray50", lty=3)
 ```
 
@@ -395,9 +371,43 @@ nb_auc_red_reduced <- unlist(slot(nb_auc_red_reduced, "y.values"))
 nb_auc_red_reduced
 ```
 
+  
+**White Wine (Reduced Dataset)**
+``` {r}
+### White Wine NB Analysis
+
+nb_model_white_reduced <- naiveBayes(as.factor(label) ~ . - label_binary , traindata_white_reduced, laplace=.01)
+
+nb_prediction_white_reduced <- predict(nb_model_white_reduced,
+                                       # remove column "label" and "label_binary"
+                                       testdata_white_reduced[,!(names(data_whitewine_reduced_labelled) %in% c('label', 'label_binary'))],
+                                       type='raw') 
+
+nb_score_white_reduced <- nb_prediction_white_reduced[, c("good")]
+
+actual_class_white_reduced <- testdata_white_reduced$label == 'good' 
+nb_pred_white_reduced <- prediction(nb_score_white_reduced, actual_class_white_reduced)
+nb_perf_white_reduced <- performance(nb_pred_white_reduced, "tpr", "fpr")
+```
+
+
+``` {r}
+plot(nb_perf_white_reduced, col="blue", lwd=2, main="White Wine Quality Label NB Model Prediction Perf", xlab="False Positive Rate (FPR)", ylab="True Positive Rate (TPR)")
+abline(a=0, b=1, col="gray50", lty=3)
+```
+
+
+``` {r}
+nb_auc_white_reduced <- performance(nb_pred_white_reduced, "auc")
+nb_auc_white_reduced <- unlist(slot(nb_auc_white_reduced, "y.values"))
+nb_auc_white_reduced
+
+```
+
+
+To compare the performance between the red and white wines for the Naive Bayes Classifer, we can also plot them in a side-by-side plot, or plot both the AOC curves in one plot:  
 
 **Side-by-side Plot**
-  
 ``` {r}
 par(mfrow=c(1,2)) 
 plot(nb_perf_red_reduced, col="red", lwd=2, main="Red Wine Quality Label NB Model Prediction Perf", xlab="False Positive Rate (FPR)", ylab="True Positive Rate (TPR)")
@@ -425,154 +435,11 @@ legend("topleft",
 ```
 
 
-**White Wine**
-``` {r}
-### White Wine NB Analysis
-
-nb_model_white <- naiveBayes(as.factor(label) ~ . - label_binary , traindata_white_full, laplace=.01)
-
-nb_prediction_white <- predict(nb_model_white,
-                               # remove column "label"
-                               testdata_white_full[,!(names(data_white_wine_labelled) %in% c('label', 'label_binary'))],
-                               type='raw') 
-
-nb_score_white <- nb_prediction_white[, c("good")]
-
-actual_class_white <- testdata_white_full$label == 'good' 
-nb_pred_white <- prediction(nb_score_white, actual_class_white)
-nb_perf_white <- performance(nb_pred_white, "tpr", "fpr")
 
 
-```
+### Logistic Regression 
 
-
-``` {r}
-plot(nb_perf_white, col="blue", lwd=2, xlab="False Positive Rate (FPR)", ylab="True Positive Rate (TPR)")
-abline(a=0, b=1, col="gray50", lty=3)
-```
-
-
-``` {r}
-nb_auc_white <- performance(nb_pred_white, "auc")
-nb_auc_white <- unlist(slot(nb_auc_white, "y.values"))
-nb_auc_white
-
-```
-
-**Red Wine**
-``` {r}
-
-
-
-nb_model_red <- naiveBayes(as.factor(label) ~ . - label_binary, traindata_red_full, laplace=.01)
-
-nb_prediction_red <- predict(nb_model_red,
-                             # remove column "label"
-                             testdata_red_full[,!(names(data_red_wine_labelled) %in% c('label','label_binary'))],
-                             type='raw') 
-
-nb_score_red <- nb_prediction_red[, c("good")]
-
-actual_class_red <- testdata_red_full$label == 'good' 
-nb_pred_red <- prediction(nb_score_red, actual_class_red)
-nb_perf_red <- performance(nb_pred_red, "tpr", "fpr")
-
-```
-
-``` {r}
-plot(nb_perf_red, lwd=2, xlab="False Positive Rate (FPR)", ylab="True Positive Rate (TPR)")
-abline(a=0, b=1, col="gray50", lty=3)
-```
-
-``` {r}
-nb_auc_red <- performance(nb_pred_red, "auc")
-nb_auc_red <- unlist(slot(nb_auc_red, "y.values"))
-nb_auc_red
-```
-
-
-**Side-by-side Plot**
-  
-``` {r}
-par(mfrow=c(1,2))
-plot(nb_perf_red, col="red", lwd=2, main="Red Wine Quality Label NB Model Prediction Perf", xlab="False Positive Rate (FPR)", ylab="True Positive Rate (TPR)")
-abline(a=0, b=1, col="gray50", lty=3)
-plot(nb_perf_white, col="blue", lwd=2, main="White Wine Quality Label NB Model Prediction Perf", xlab="False Positive Rate (FPR)", ylab="True Positive Rate (TPR)")
-abline(a=0, b=1, col="gray50", lty=3)
-```
-
-**Multiple lines in single plot**
-``` {r}
-par(mfrow=c(1,1)) 
-plot(nb_perf_red, col="red", lwd=2, main="Wine Quality Label NB Model Prediction Perf (Full Dataset)", xlab="False Positive Rate (FPR)", ylab="True Positive Rate (TPR)")
-abline(a=0, b=1, col="gray50", lty=3)
-
-# par(new = TRUE)  # We draw on top of the existing plot.
-# plot(perf, col = "red", lwd=2, main="", xlab="", ylab="")
-
-par(new = TRUE)  # We draw on top of the existing plot.
-plot(nb_perf_white, col = "blue", lwd=2, main="", xlab="", ylab="")
-
-legend("topleft",
-       legend = c("Red Wine", "White Wine"),
-       col = c("red", "blue"),
-       pch = c(0, 0, 0))
-```
-
-**AUCs (Full Dataset)**
-```{r}
-print(paste0("AUC of NB Model (Red Wine Full Dataset):", nb_auc_red))
-print(paste0("AUC of NB Model (White Wine Full Dataset):", nb_auc_white))
-```
-
-
-
-**Logistic Regression** 
-  
-  Aim: To predict whether the wine is above median quality or otherwise
-- Hence the response variable would be the binary variable whether the wine is “good” or “bad”
-
-How we chose the predictors:
-  - Full model with all the predictors
-- Violates the assumption that variables have to be independent from one another
-- Good for comparison
-- Remove correlated variables for a reduced model as per EDA
-- Fulfills all the assumptions
-
-Split the data into training data and testing data into 80/20 percent of the dataset respectively.
-- Model is created using training data
-- ROC curve and AUC is derived using testing data
-- Done to ensure overfitting does not happen
-
-**Red Wine** 
-  
-**Full Model** 
-  
-```{r}
-
-
-
-red_lr_train <- glm(formula = label_binary ~ 
-                      fixed.acidity + volatile.acidity + citric.acid
-                    + residual.sugar + chlorides + free.sulfur.dioxide
-                    + total.sulfur.dioxide + density + pH 
-                    + sulphates + alcohol, data = traindata_red_full,
-                    family = binomial(link="logit"))
-
-summary(red_lr_train)
-
-pred = predict.glm(red_lr_train,testdata_red_full,  type="response")
-predObj <- prediction(pred, testdata_red_full$label_binary)
-rocObj = performance(predObj, measure="tpr", x.measure="fpr")
-aucObj = performance(predObj, measure="auc")
-plot(rocObj, main = paste("Area under the curve:",
-                          round(aucObj@y.values[[1]] ,4)))
-lr_auc_red <- round(aucObj@y.values[[1]] ,4)
-
-
-```
-
-**Reduced Model** 
+**Red Wine (Reduced Dataset)**
   
 ```{r}
 
@@ -617,36 +484,7 @@ ggplot(mydata, aes(logit, predictor.value))+
 
 ```
 
-
-
-**White Wine** 
-  
-**Full Model** 
-  
-```{r}
-
-white_lr_train <- glm(formula = label_binary ~ 
-                        fixed.acidity + volatile.acidity + citric.acid
-                      + residual.sugar + chlorides + free.sulfur.dioxide
-                      + total.sulfur.dioxide + density + pH 
-                      + sulphates + alcohol, data = traindata_white_full,
-                      family = binomial(link="logit"))
-
-summary(white_lr_train)
-
-pred = predict.glm(white_lr_train, testdata_white_full,  type="response")
-predObj <- prediction(pred, testdata_white_full$label_binary)
-rocObj = performance(predObj, measure="tpr", x.measure="fpr")
-aucObj = performance(predObj, measure="auc")
-plot(rocObj, main = paste("Area under the curve:",
-                          round(aucObj@y.values[[1]] ,4)))
-
-lr_auc_white <- round(aucObj@y.values[[1]] ,4)
-
-
-```
-
-**Reduced Model** 
+**Whitw Wine (Reduced Dataset)** 
   
 ```{r}
 
@@ -691,8 +529,9 @@ ggplot(mydata, aes(logit, predictor.value))+
 
 ```
 
-**Decision Trees**  
-  
+### Decision Trees  
+
+**Red Wine (Reduced Dataset)**
 ```{r}
 # Red wine (reduced dataset)
 dt_fit_red_reduced  <- rpart(label ~ citric.acid
@@ -726,93 +565,37 @@ dt_auc_red_reduced
 ```
 
 
+**White Wine (Reduced Dataset)**
 
 ```{r}
 # White wine (reduced dataset)
-dt_fit_white_reduced <- rpart(label_binary ~ . - label, 
-                              data=traindata_white_reduced,
-                              control=rpart.control(minsplit=390),
-                              method="class", parms=list(split='information'))
+dt_fit_white_reduced  <- rpart(label ~ fixed.acidity + volatile.acidity + citric.acid
+                              + residual.sugar + chlorides + free.sulfur.dioxide
+                              + sulphates, data=traindata_white_reduced,control=rpart.control(minsplit=390, cp = 0.0085), method="class",
+                             parms=list(split='information'))
 summary(dt_fit_white_reduced)
-rpart.plot(dt_fit_white_reduced , type=4, extra=1)
-
+rpart.plot(dt_fit_white_reduced, type=4, extra=1)
 ```
 
 
 ```{r}
-# dt_pred_white_reduced <- prediction(predict(dt_fit_white_reduced, type = "prob")[, 2], data_whitewine_reduced_labelled$label)
-# dt_perf_white_reduced <- performance(dt_pred_white_reduced, "tpr", "fpr")
-# 
-# 
-# plot(dt_perf_white_reduced, col="blue", lwd=2, xlab="False Positive Rate (FPR)", ylab="True Positive Rate (TPR)")
-# abline(a=0, b=1, col="gray50", lty=3)
-```
+dt_prediction_white_reduced <- predict(dt_fit_white_reduced, 
+                                     testdata_white_reduced[, !(names(data_whitewine_reduced_labelled) %in% c('label', 'label_binary'))],
+                                     type='prob')
 
-```{r}
-# dt_auc_white_reduced <- performance(dt_pred_white_reduced, "auc")
-# dt_auc_white_reduced <- unlist(slot(dt_auc_white_reduced,"y.values"))          
-# dt_auc_white_reduced
-```
+dt_pred_white_reduced <- prediction(dt_prediction_white_reduced[, 2], testdata_white_reduced$label)
+
+dt_perf_white_reduced <- performance(dt_pred_white_reduced, "tpr", "fpr")
 
 
-```{r}
-# Red wine (full dataset)
-dt_fit_red_full  <- rpart(label ~ fixed.acidity + volatile.acidity + citric.acid + residual.sugar + chlorides + free.sulfur.dioxide + total.sulfur.dioxide + density + pH + sulphates + alcohol, data=traindata_red_full,control=rpart.control(minsplit=128), method="class",
-                          parms=list(split='information'))
-summary(dt_fit_red_full)
-rpart.plot(dt_fit_red_full, type=4, extra=1)
-```
-
-
-```{r}
-dt_prediction_red_full <- predict(dt_fit_red_full, 
-                                  testdata_red_full[, !(names(data_red_wine_labelled) %in% c('label', 'label_binary'))],
-                                  type='prob')
-
-dt_pred_red_full <- prediction(dt_prediction_red_full[, 2], testdata_red_full$label)
-
-dt_perf_red_full <- performance(dt_pred_red_full, "tpr", "fpr")
-
-
-plot(dt_perf_red_full, col="red", lwd=2, xlab="False Positive Rate (FPR)", ylab="True Positive Rate (TPR)")
+plot(dt_perf_white_reduced, col="blue", lwd=2, xlab="False Positive Rate (FPR)", ylab="True Positive Rate (TPR)")
 abline(a=0, b=1, col="gray50", lty=3)
 ```
 
 ```{r}
-dt_auc_red_full <- performance(dt_pred_red_full, "auc")
-dt_auc_red_full <- unlist(slot(dt_auc_red_full,"y.values"))          
-dt_auc_red_full
-```
-
-
-
-```{r}
-# White wine (full dataset)
-dt_fit_white_full  <- rpart(label ~ fixed.acidity + volatile.acidity + citric.acid + residual.sugar + chlorides + free.sulfur.dioxide + total.sulfur.dioxide + density + pH + sulphates + alcohol, data=traindata_white_full,control=rpart.control(minsplit=390), method="class",
-                            parms=list(split='information'))
-summary(dt_fit_white_full )
-rpart.plot(dt_fit_white_full , type=4, extra=1)
-```
-
-
-```{r}
-dt_prediction_white_full <- predict(dt_fit_white_full, 
-                                    testdata_white_full[, !(names(data_white_wine_labelled) %in% c('label', 'label_binary'))],
-                                    type='prob')
-
-dt_pred_white_full <- prediction(dt_prediction_white_full[, 2], testdata_white_full$label)
-
-dt_perf_white_full <- performance(dt_pred_white_full, "tpr", "fpr")
-
-
-plot(dt_perf_white_full, col="blue", lwd=2, xlab="False Positive Rate (FPR)", ylab="True Positive Rate (TPR)")
-abline(a=0, b=1, col="gray50", lty=3)
-```
-
-```{r}
-dt_auc_white_full <- performance(dt_pred_white_full, "auc")
-dt_auc_white_full <- unlist(slot(dt_auc_white_full,"y.values"))          
-dt_auc_white_full
+dt_auc_white_reduced <- performance(dt_pred_white_reduced, "auc")
+dt_auc_white_reduced <- unlist(slot(dt_auc_white_reduced,"y.values"))
+dt_auc_white_reduced
 ```
 
 
@@ -1267,5 +1050,233 @@ Significant variables:
 - fixed.acidity 
 - sulphates
 - residual.sugar
+
+
+## Appendix 
+
+For comparison, we also provide the classifiers trained with the full dataset (which may have correlated variables as we have explained above). 
+
+
+### Naive Bayes 
+
+**White Wine**
+``` {r}
+### White Wine NB Analysis
+
+nb_model_white <- naiveBayes(as.factor(label) ~ . - label_binary , traindata_white_full, laplace=.01)
+
+nb_prediction_white <- predict(nb_model_white,
+                               # remove column "label"
+                               testdata_white_full[,!(names(data_white_wine_labelled) %in% c('label', 'label_binary'))],
+                               type='raw') 
+
+nb_score_white <- nb_prediction_white[, c("good")]
+
+actual_class_white <- testdata_white_full$label == 'good' 
+nb_pred_white <- prediction(nb_score_white, actual_class_white)
+nb_perf_white <- performance(nb_pred_white, "tpr", "fpr")
+
+
+```
+
+
+``` {r}
+plot(nb_perf_white, col="blue", lwd=2, xlab="False Positive Rate (FPR)", ylab="True Positive Rate (TPR)")
+abline(a=0, b=1, col="gray50", lty=3)
+```
+
+
+``` {r}
+nb_auc_white <- performance(nb_pred_white, "auc")
+nb_auc_white <- unlist(slot(nb_auc_white, "y.values"))
+nb_auc_white
+
+```
+
+**Red Wine**
+``` {r}
+
+
+
+nb_model_red <- naiveBayes(as.factor(label) ~ . - label_binary, traindata_red_full, laplace=.01)
+
+nb_prediction_red <- predict(nb_model_red,
+                             # remove column "label"
+                             testdata_red_full[,!(names(data_red_wine_labelled) %in% c('label','label_binary'))],
+                             type='raw') 
+
+nb_score_red <- nb_prediction_red[, c("good")]
+
+actual_class_red <- testdata_red_full$label == 'good' 
+nb_pred_red <- prediction(nb_score_red, actual_class_red)
+nb_perf_red <- performance(nb_pred_red, "tpr", "fpr")
+
+```
+
+``` {r}
+plot(nb_perf_red, lwd=2, xlab="False Positive Rate (FPR)", ylab="True Positive Rate (TPR)")
+abline(a=0, b=1, col="gray50", lty=3)
+```
+
+``` {r}
+nb_auc_red <- performance(nb_pred_red, "auc")
+nb_auc_red <- unlist(slot(nb_auc_red, "y.values"))
+nb_auc_red
+```
+
+
+**Side-by-side Plot**
+  
+``` {r}
+par(mfrow=c(1,2))
+plot(nb_perf_red, col="red", lwd=2, main="Red Wine Quality Label NB Model Prediction Perf", xlab="False Positive Rate (FPR)", ylab="True Positive Rate (TPR)")
+abline(a=0, b=1, col="gray50", lty=3)
+plot(nb_perf_white, col="blue", lwd=2, main="White Wine Quality Label NB Model Prediction Perf", xlab="False Positive Rate (FPR)", ylab="True Positive Rate (TPR)")
+abline(a=0, b=1, col="gray50", lty=3)
+```
+
+**Multiple lines in single plot**
+``` {r}
+par(mfrow=c(1,1)) 
+plot(nb_perf_red, col="red", lwd=2, main="Wine Quality Label NB Model Prediction Perf (Full Dataset)", xlab="False Positive Rate (FPR)", ylab="True Positive Rate (TPR)")
+abline(a=0, b=1, col="gray50", lty=3)
+
+# par(new = TRUE)  # We draw on top of the existing plot.
+# plot(perf, col = "red", lwd=2, main="", xlab="", ylab="")
+
+par(new = TRUE)  # We draw on top of the existing plot.
+plot(nb_perf_white, col = "blue", lwd=2, main="", xlab="", ylab="")
+
+legend("topleft",
+       legend = c("Red Wine", "White Wine"),
+       col = c("red", "blue"),
+       pch = c(0, 0, 0))
+```
+
+**AUCs (Full Dataset)**
+```{r}
+print(paste0("AUC of NB Model (Red Wine Full Dataset):", nb_auc_red))
+print(paste0("AUC of NB Model (White Wine Full Dataset):", nb_auc_white))
+```
+
+
+
+
+### Logistic Regression
+**Red Wine (Full Dataset)** 
+  
+```{r}
+
+
+
+red_lr_train <- glm(formula = label_binary ~ 
+                      fixed.acidity + volatile.acidity + citric.acid
+                    + residual.sugar + chlorides + free.sulfur.dioxide
+                    + total.sulfur.dioxide + density + pH 
+                    + sulphates + alcohol, data = traindata_red_full,
+                    family = binomial(link="logit"))
+
+summary(red_lr_train)
+
+pred = predict.glm(red_lr_train,testdata_red_full,  type="response")
+predObj <- prediction(pred, testdata_red_full$label_binary)
+rocObj = performance(predObj, measure="tpr", x.measure="fpr")
+aucObj = performance(predObj, measure="auc")
+plot(rocObj, main = paste("Area under the curve:",
+                          round(aucObj@y.values[[1]] ,4)))
+lr_auc_red <- round(aucObj@y.values[[1]] ,4)
+
+
+```
+
+**White Wine (Full Dataset)**
+  
+```{r}
+
+white_lr_train <- glm(formula = label_binary ~ 
+                        fixed.acidity + volatile.acidity + citric.acid
+                      + residual.sugar + chlorides + free.sulfur.dioxide
+                      + total.sulfur.dioxide + density + pH 
+                      + sulphates + alcohol, data = traindata_white_full,
+                      family = binomial(link="logit"))
+
+summary(white_lr_train)
+
+pred = predict.glm(white_lr_train, testdata_white_full,  type="response")
+predObj <- prediction(pred, testdata_white_full$label_binary)
+rocObj = performance(predObj, measure="tpr", x.measure="fpr")
+aucObj = performance(predObj, measure="auc")
+plot(rocObj, main = paste("Area under the curve:",
+                          round(aucObj@y.values[[1]] ,4)))
+
+lr_auc_white <- round(aucObj@y.values[[1]] ,4)
+
+
+```
+
+
+### Decision Trees 
+
+**Red Wine (Full Dataset)**
+
+```{r}
+# Red wine (full dataset)
+dt_fit_red_full  <- rpart(label ~ fixed.acidity + volatile.acidity + citric.acid + residual.sugar + chlorides + free.sulfur.dioxide + total.sulfur.dioxide + density + pH + sulphates + alcohol, data=traindata_red_full,control=rpart.control(minsplit=128), method="class",
+                          parms=list(split='information'))
+summary(dt_fit_red_full)
+rpart.plot(dt_fit_red_full, type=4, extra=1)
+```
+
+
+```{r}
+dt_prediction_red_full <- predict(dt_fit_red_full, 
+                                  testdata_red_full[, !(names(data_red_wine_labelled) %in% c('label', 'label_binary'))],
+                                  type='prob')
+
+dt_pred_red_full <- prediction(dt_prediction_red_full[, 2], testdata_red_full$label)
+
+dt_perf_red_full <- performance(dt_pred_red_full, "tpr", "fpr")
+
+
+plot(dt_perf_red_full, col="red", lwd=2, xlab="False Positive Rate (FPR)", ylab="True Positive Rate (TPR)")
+abline(a=0, b=1, col="gray50", lty=3)
+```
+
+```{r}
+dt_auc_red_full <- performance(dt_pred_red_full, "auc")
+dt_auc_red_full <- unlist(slot(dt_auc_red_full,"y.values"))          
+dt_auc_red_full
+```
+
+**White Wine (Full Dataset)**
+
+```{r}
+# White wine (full dataset)
+dt_fit_white_full  <- rpart(label ~ fixed.acidity + volatile.acidity + citric.acid + residual.sugar + chlorides + free.sulfur.dioxide + total.sulfur.dioxide + density + pH + sulphates + alcohol, data=traindata_white_full,control=rpart.control(minsplit=390), method="class",
+                            parms=list(split='information'))
+summary(dt_fit_white_full )
+rpart.plot(dt_fit_white_full , type=4, extra=1)
+```
+
+
+```{r}
+dt_prediction_white_full <- predict(dt_fit_white_full, 
+                                    testdata_white_full[, !(names(data_white_wine_labelled) %in% c('label', 'label_binary'))],
+                                    type='prob')
+
+dt_pred_white_full <- prediction(dt_prediction_white_full[, 2], testdata_white_full$label)
+
+dt_perf_white_full <- performance(dt_pred_white_full, "tpr", "fpr")
+
+
+plot(dt_perf_white_full, col="blue", lwd=2, xlab="False Positive Rate (FPR)", ylab="True Positive Rate (TPR)")
+abline(a=0, b=1, col="gray50", lty=3)
+```
+
+```{r}
+dt_auc_white_full <- performance(dt_pred_white_full, "auc")
+dt_auc_white_full <- unlist(slot(dt_auc_white_full,"y.values"))          
+dt_auc_white_full
+```
 
 
